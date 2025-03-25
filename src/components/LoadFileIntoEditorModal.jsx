@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { Modal, Button, ListGroup } from "react-bootstrap";
+import React, { useState, useMemo } from "react";
+import { Modal, Button, ListGroup, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useDatabase } from "../contexts/DatabaseContext";
+import Fuse from "fuse.js";
 
 function LoadFileIntoEditorModal({ show, onHide, hasUnsavedChanges, onDiscardChanges, onSaveChanges }) {
     const navigate = useNavigate();
@@ -9,10 +10,30 @@ function LoadFileIntoEditorModal({ show, onHide, hasUnsavedChanges, onDiscardCha
     const [selectedDoc, setSelectedDoc] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const handleDocumentSelect = (doc) => {
         setSelectedDoc(doc);
     };
+
+    const sortedDocuments = useMemo(() => {
+        if (!searchTerm.trim()) {
+            return documents;
+        }
+
+        const fuse = new Fuse(documents, {
+            keys: ["name"],
+            threshold: 1, // Allows full range of similarity
+            distance: 100, // Maximum distance for fuzzy matching
+        });
+
+        const results = fuse.search(searchTerm);
+        const sorted = results.map((result) => result.item);
+
+        // Add documents not in the search results to the end of the sorted list
+        const remainingDocuments = documents.filter((doc) => !sorted.includes(doc));
+        return [...sorted, ...remainingDocuments];
+    }, [documents, searchTerm]);
 
     const handleDeleteClick = () => {
         setShowDeleteConfirm(true);
@@ -58,8 +79,14 @@ function LoadFileIntoEditorModal({ show, onHide, hasUnsavedChanges, onDiscardCha
                     <Modal.Title>Load Document</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="bg-dark">
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label className="text-white">Search Documents</Form.Label>
+                            <Form.Control type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search by document name" className="bg-dark border-secondary text-white" />
+                        </Form.Group>
+                    </Form>
                     <ListGroup className="bg-dark">
-                        {documents.map((doc) => (
+                        {sortedDocuments.map((doc) => (
                             <ListGroup.Item key={doc.id} active={selectedDoc?.id === doc.id} onClick={() => handleDocumentSelect(doc)} style={{ cursor: "pointer" }} className="bg-dark border-secondary text-white">
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>

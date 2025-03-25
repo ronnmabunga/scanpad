@@ -141,7 +141,7 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                     cursor: "pointer",
                 }}
             >
-                {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `Transcribed text is now on your clipboard! Paste it in the editor or extract another image.` : `Paste an image with text to extract content.`}</div>}
+                {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `Transcribed text is now on your clipboard! Paste it in the editor or extract another image.` : `Paste an image to extract text content.`}</div>}
                 <div>{isCollapsed ? "↓ See" : "↑ Hide"} Results</div>
             </div>
         </div>

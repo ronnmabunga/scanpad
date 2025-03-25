@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
 import { useState, useEffect, useRef } from "react";
 import LoadFileIntoEditorModal from "./LoadFileIntoEditorModal";
+import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
 
 function RichTextEditor({ className, style, currentDoc, ...props }) {
@@ -14,6 +15,7 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
     const quillRef = useRef(null);
     const [content, setContent] = useState(currentDoc?.content || "");
     const [showLoadModal, setShowLoadModal] = useState(false);
+    const [showSaveAsModal, setShowSaveAsModal] = useState(false);
     const [lastSavedContent, setLastSavedContent] = useState(currentDoc?.content || "");
 
     useEffect(() => {
@@ -105,7 +107,7 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
     return (
         <div className={`flex-grow-1 d-flex ${className}`} style={{ ...style }} {...props}>
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
-                <Navbar bg="dark" variant="dark" className="px-3">
+                <Navbar bg="dark" variant="dark" className="px-3" style={{ border: "1px solid white" }}>
                     <div className="d-flex w-100">
                         <Nav className="me-auto">
                             {!isHomePage && (
@@ -114,13 +116,17 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                                 </Nav.Link>
                             )}
                             <NavDropdown title="File" id="file-dropdown">
-                                <NavDropdown.Item>Save</NavDropdown.Item>
-                                <NavDropdown.Item>Save As</NavDropdown.Item>
+                                <NavDropdown.Item onClick={handleSaveChanges} disabled={!hasUnsavedChanges}>
+                                    Save
+                                </NavDropdown.Item>
+                                <NavDropdown.Item onClick={() => setShowSaveAsModal(true)}>Save As</NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => setShowLoadModal(true)}>Load</NavDropdown.Item>
                             </NavDropdown>
                         </Nav>
                         <div className="d-flex align-items-center position-absolute start-50 translate-middle-x">
-                            <span className="text-white">{currentDoc?.name || "Untitled Document"}</span>
+                            <span className="text-white">
+                                <strong>{currentDoc?.name || "Untitled Document"}</strong>
+                            </span>
                         </div>
                         <div className="d-flex align-items-center ms-auto">
                             <span className="text-white">{hasUnsavedChanges ? <i className="bi bi-save text-danger"></i> : <i className="bi bi-check-circle text-success"></i>}</span>
@@ -144,6 +150,7 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                 />
             </div>
             <LoadFileIntoEditorModal show={showLoadModal} onHide={() => setShowLoadModal(false)} hasUnsavedChanges={hasUnsavedChanges} onDiscardChanges={handleDiscardChanges} onSaveChanges={handleSaveChanges} />
+            <SaveFileAsIntoEditorModal show={showSaveAsModal} onHide={() => setShowSaveAsModal(false)} currentDoc={currentDoc} content={content} />
             <style>{`
                 .ql-toolbar.ql-snow {
                     position: sticky;
@@ -226,6 +233,22 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                 .dropdown-item:hover {
                     background-color: #343a40;
                     color: white;
+                }
+                .dropdown-item.disabled {
+                    color: #adb5bd !important;
+                    cursor: not-allowed;
+                }
+                .dropdown-item.disabled:hover {
+                    color: #adb5bd !important;
+                }
+                .nav-link, .nav-link:focus, .nav-link:hover, .nav-link.active {
+                    color: white !important;
+                }
+                .dropdown-toggle {
+                    color: white !important;
+                }
+                .dropdown-toggle:hover, .dropdown-toggle:focus {
+                    color: white !important;
                 }
             `}</style>
         </div>

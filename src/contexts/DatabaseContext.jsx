@@ -18,14 +18,14 @@ export function DatabaseProvider({ children }) {
         const initDB = async () => {
             try {
                 const newDb = new Dexie("EditorStorage");
-                newDb.version(1).stores({
-                    documents: "id, name, content, timestamp",
+                newDb.version(2).stores({
+                    documents: "id, name, content, updatedAt, createdAt",
                 });
                 await newDb.open();
                 setDb(newDb);
 
                 // Load documents after DB initialization
-                const docs = await newDb.documents.orderBy("timestamp").reverse().toArray();
+                const docs = await newDb.documents.orderBy("updatedAt").reverse().toArray();
                 setDocuments(docs);
                 if (docs.length > 0) {
                     setCurrentDoc(docs[0]);
@@ -54,7 +54,7 @@ export function DatabaseProvider({ children }) {
             await db.documents.put(doc);
 
             // Update local state
-            const updatedDocs = await db.documents.orderBy("timestamp").reverse().toArray();
+            const updatedDocs = await db.documents.orderBy("updatedAt").reverse().toArray();
             setDocuments(updatedDocs);
             setCurrentDoc(doc);
 
@@ -74,7 +74,7 @@ export function DatabaseProvider({ children }) {
             await db.documents.delete(docId);
 
             // Update local state
-            const updatedDocs = await db.documents.orderBy("timestamp").reverse().toArray();
+            const updatedDocs = await db.documents.orderBy("updatedAt").reverse().toArray();
             setDocuments(updatedDocs);
             if (currentDoc?.id === docId) {
                 setCurrentDoc(updatedDocs[0] || null);

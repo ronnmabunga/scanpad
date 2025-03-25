@@ -9,6 +9,7 @@ function App() {
         <DatabaseProvider>
             <Routes>
                 <Route path="/" element={<PageHome />} />
+                <Route path="/edit" element={<PageEditor />} />
                 <Route path="/edit/:fileId" element={<PageEditor />} />
                 <Route path="/view/:fileId" element={<PageFileViewer />} />
             </Routes>
