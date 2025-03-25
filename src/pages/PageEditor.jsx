@@ -6,7 +6,7 @@ import { useDatabase } from "../contexts/DatabaseContext";
 
 function PageEditor() {
     const { fileId } = useParams();
-    const { documents, currentDoc, setCurrentDoc } = useDatabase();
+    const { documents, setCurrentDoc } = useDatabase();
     const [isNotFound, setIsNotFound] = useState(false);
 
     useEffect(() => {
@@ -14,6 +14,7 @@ function PageEditor() {
             const doc = documents.find((d) => d.id === fileId);
             if (doc) {
                 setCurrentDoc(doc);
+                localStorage.setItem("lastOpenedDocId", doc?.id);
                 setIsNotFound(false);
             } else {
                 setIsNotFound(true);
@@ -27,6 +28,7 @@ function PageEditor() {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             });
+            localStorage.setItem("lastOpenedDocId", null);
             setIsNotFound(false);
         }
     }, [fileId, documents, setCurrentDoc]);
@@ -39,7 +41,7 @@ function PageEditor() {
         <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
             <div className="row m-0" style={{ height: "100%" }}>
                 <div className="col-12 p-0" style={{ height: "100%" }}>
-                    <RichTextEditor style={{ height: "100%" }} currentDoc={currentDoc} />
+                    <RichTextEditor style={{ height: "100%" }} />
                 </div>
             </div>
         </div>

@@ -14,12 +14,13 @@ function PageFileViewer() {
             const doc = documents.find((d) => d.id === fileId);
             if (doc) {
                 setCurrentDoc(doc);
+                localStorage.setItem("lastOpenedDocId", doc?.id);
                 setIsNotFound(false);
             } else {
                 setIsNotFound(true);
             }
         }
-    }, [fileId, documents, setCurrentDoc]);
+    }, [fileId, documents, setCurrentDoc, currentDoc]);
 
     if (isNotFound) {
         return <PageFileNotFound />;

@@ -2,22 +2,23 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Navbar, Nav, NavDropdown } from "react-bootstrap";
+import { Navbar, Nav, NavDropdown, Modal, Button } from "react-bootstrap";
 import { useState, useEffect, useRef } from "react";
 import LoadFileIntoEditorModal from "./LoadFileIntoEditorModal";
 import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
 
-function RichTextEditor({ className, style, currentDoc, ...props }) {
+function RichTextEditor({ className, style, ...props }) {
     const location = useLocation();
     const navigate = useNavigate();
-    const { saveDocument } = useDatabase();
+    const { saveDocument, currentDoc, setCurrentDoc } = useDatabase();
     const quillRef = useRef(null);
     const [content, setContent] = useState(currentDoc?.content || "");
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [showSaveAsModal, setShowSaveAsModal] = useState(false);
+    const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
     const [lastSavedContent, setLastSavedContent] = useState(currentDoc?.content || "");
-
+    useEffect(() => {}, [currentDoc]);
     useEffect(() => {
         if (currentDoc) {
             setContent(currentDoc.content);
@@ -36,7 +37,7 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
     const isHomePage = location.pathname === "/";
 
     const normalizeContent = (str) => {
-        if (!str) return "";
+        if (!str || str.trim() === "") return "";
         // First normalize all types of line breaks
         let normalized = str.replace(/\r\n/g, "").replace(/\n/g, "");
 
@@ -86,8 +87,6 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
         return normalized;
     };
 
-    const hasUnsavedChanges = normalizeContent(content) !== normalizeContent(lastSavedContent);
-
     const handleDiscardChanges = () => {
         setContent(lastSavedContent);
     };
@@ -102,6 +101,28 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
             await saveDocument(updatedDoc);
             setLastSavedContent(content);
         }
+        localStorage.setItem("lastOpenedDocId", currentDoc?.id);
+    };
+
+    const handleNewDocument = () => {
+        if (normalizeContent(content) !== normalizeContent(lastSavedContent)) {
+            setShowUnsavedConfirm(true);
+        } else {
+            setContent("");
+            setLastSavedContent("");
+            navigate("/edit");
+            setCurrentDoc(null);
+            localStorage.setItem("lastOpenedDocId", null);
+        }
+    };
+
+    const confirmNewDocument = () => {
+        setContent("");
+        setLastSavedContent("");
+        navigate("/edit");
+        setCurrentDoc(null);
+        localStorage.setItem("lastOpenedDocId", null);
+        setShowUnsavedConfirm(false);
     };
 
     return (
@@ -116,7 +137,8 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                                 </Nav.Link>
                             )}
                             <NavDropdown title="File" id="file-dropdown">
-                                <NavDropdown.Item onClick={handleSaveChanges} disabled={!hasUnsavedChanges}>
+                                <NavDropdown.Item onClick={handleNewDocument}>New</NavDropdown.Item>
+                                <NavDropdown.Item onClick={handleSaveChanges} disabled={!(normalizeContent(content) !== normalizeContent(lastSavedContent)) || !currentDoc?.name}>
                                     Save
                                 </NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => setShowSaveAsModal(true)}>Save As</NavDropdown.Item>
@@ -129,7 +151,7 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                             </span>
                         </div>
                         <div className="d-flex align-items-center ms-auto">
-                            <span className="text-white">{hasUnsavedChanges ? <i className="bi bi-save text-danger"></i> : <i className="bi bi-check-circle text-success"></i>}</span>
+                            <span className="text-white">{normalizeContent(content) !== normalizeContent(lastSavedContent) ? <i className="bi bi-save text-danger"></i> : <i className="bi bi-check-circle text-success"></i>}</span>
                         </div>
                     </div>
                 </Navbar>
@@ -149,8 +171,25 @@ function RichTextEditor({ className, style, currentDoc, ...props }) {
                     }}
                 />
             </div>
-            <LoadFileIntoEditorModal show={showLoadModal} onHide={() => setShowLoadModal(false)} hasUnsavedChanges={hasUnsavedChanges} onDiscardChanges={handleDiscardChanges} onSaveChanges={handleSaveChanges} />
-            <SaveFileAsIntoEditorModal show={showSaveAsModal} onHide={() => setShowSaveAsModal(false)} currentDoc={currentDoc} content={content} />
+            <LoadFileIntoEditorModal show={showLoadModal} onHide={() => setShowLoadModal(false)} hasUnsavedChanges={normalizeContent(content) !== normalizeContent(lastSavedContent)} onDiscardChanges={handleDiscardChanges} onSaveChanges={handleSaveChanges} />
+            <SaveFileAsIntoEditorModal show={showSaveAsModal} onHide={() => setShowSaveAsModal(false)} content={content} />
+            <Modal show={showUnsavedConfirm} onHide={() => setShowUnsavedConfirm(false)} className="text-white">
+                <Modal.Header closeButton className="bg-dark border-secondary">
+                    <Modal.Title>Unsaved Changes</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="bg-dark">You have unsaved changes. What would you like to do?</Modal.Body>
+                <Modal.Footer className="bg-dark border-secondary">
+                    <Button variant="secondary" onClick={() => setShowUnsavedConfirm(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={confirmNewDocument}>
+                        Discard Changes
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveChanges}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <style>{`
                 .ql-toolbar.ql-snow {
                     position: sticky;

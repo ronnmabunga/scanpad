@@ -25,10 +25,14 @@ export function DatabaseProvider({ children }) {
                 setDb(newDb);
 
                 // Load documents after DB initialization
-                const docs = await newDb.documents.orderBy("updatedAt").reverse().toArray();
+                const docs = await newDb.documents.toArray();
                 setDocuments(docs);
-                if (docs.length > 0) {
-                    setCurrentDoc(docs[0]);
+                const lastOpenedDoc = localStorage.getItem("lastOpenedDocId");
+                if (lastOpenedDoc) {
+                    const doc = docs.find((d) => d.id === lastOpenedDoc);
+                    setCurrentDoc(doc || null);
+                } else if (docs.length > 0) {
+                    setCurrentDoc(null);
                 }
 
                 setIsLoading(false);
@@ -56,7 +60,13 @@ export function DatabaseProvider({ children }) {
             // Update local state
             const updatedDocs = await db.documents.orderBy("updatedAt").reverse().toArray();
             setDocuments(updatedDocs);
-            setCurrentDoc(doc);
+            setCurrentDoc((prev) => {
+                if (prev?.id === doc?.id) {
+                    localStorage.setItem("lastOpenedDocId", doc?.id);
+                    return doc;
+                }
+                return prev;
+            });
 
             return true;
         } catch (err) {
@@ -77,7 +87,13 @@ export function DatabaseProvider({ children }) {
             const updatedDocs = await db.documents.orderBy("updatedAt").reverse().toArray();
             setDocuments(updatedDocs);
             if (currentDoc?.id === docId) {
-                setCurrentDoc(updatedDocs[0] || null);
+                setCurrentDoc(() => {
+                    if (updatedDocs[0]) {
+                        localStorage.setItem("lastOpenedDocId", updatedDocs[0]?.id);
+                        return updatedDocs[0];
+                    }
+                    return null;
+                });
             }
 
             return true;

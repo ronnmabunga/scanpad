@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Tesseract from "tesseract.js";
+import { Modal, Button } from "react-bootstrap";
+import { FaCamera, FaUpload } from "react-icons/fa";
 
 const OCRImageCapture = ({ className, style, ...props }) => {
     const [imageSrc, setImageSrc] = useState(null);
     const [transcribedText, setTranscribedText] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const videoRef = useRef(null);
     const language = "eng";
 
     const handlePaste = (event) => {
@@ -33,6 +37,57 @@ const OCRImageCapture = ({ className, style, ...props }) => {
         event.preventDefault();
     };
 
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageUrl = e.target.result;
+                setImageSrc(imageUrl);
+                processOCR(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleDrop = (event) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageUrl = e.target.result;
+                setImageSrc(imageUrl);
+                processOCR(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const openCamera = async () => {
+        setIsCameraOpen(true);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoRef.current.srcObject = stream;
+        } catch (error) {
+            console.error("Error accessing camera:", error);
+        }
+    };
+
+    const capturePhoto = () => {
+        const video = videoRef.current;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageUrl = canvas.toDataURL("image/png");
+        setImageSrc(imageUrl);
+        processOCR(imageUrl);
+        video.srcObject.getTracks().forEach((track) => track.stop());
+        setIsCameraOpen(false);
+    };
+
     const processOCR = (imageFile) => {
         setIsProcessing(true);
         Tesseract.recognize(imageFile, language, {
@@ -53,7 +108,13 @@ const OCRImageCapture = ({ className, style, ...props }) => {
 
     useEffect(() => {
         document.addEventListener("paste", handlePaste);
-        return () => document.removeEventListener("paste", handlePaste);
+        window.addEventListener("drop", handleDrop);
+        window.addEventListener("dragover", (e) => e.preventDefault());
+        return () => {
+            document.removeEventListener("paste", handlePaste);
+            window.removeEventListener("drop", handleDrop);
+            window.removeEventListener("dragover", (e) => e.preventDefault());
+        };
     }, []);
 
     const toggleCollapse = () => {
@@ -88,10 +149,10 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                 <div>
                     {imageSrc ? (
                         <>
-                            <p>Pasted Image:</p>
+                            <p>Captured Image:</p>
                             <img
                                 src={imageSrc}
-                                alt="Pasted"
+                                alt="Captured"
                                 className="p-3"
                                 style={{
                                     objectFit: "contain",
@@ -102,7 +163,7 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                             />
                         </>
                     ) : (
-                        <div>No image pasted yet.</div>
+                        <div>No image captured yet.</div>
                     )}
                     <div>
                         {isProcessing ? (
@@ -133,6 +194,24 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                 </div>
             </div>
 
+            {/* Camera Modal */}
+            <Modal show={isCameraOpen} onHide={() => setIsCameraOpen(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Camera</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-center">
+                    <video ref={videoRef} autoPlay style={{ maxWidth: "100%" }} />
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setIsCameraOpen(false)}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={capturePhoto}>
+                        Capture Photo
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             {/* Collapse Toggle */}
             <div
                 className="font-body-5 w-100 p-1 border border-dark bg-dark text-white d-flex flex-row align-items-center justify-content-around"
@@ -141,7 +220,17 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                     cursor: "pointer",
                 }}
             >
-                {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `Transcribed text is now on your clipboard! Paste it in the editor or extract another image.` : `Paste an image to extract text content.`}</div>}
+                {/* Camera and Upload Options */}
+                <div className="d-flex justify-content-around p-2">
+                    <label className="btn btn-secondary text-white me-2">
+                        <FaUpload />
+                        <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
+                    </label>
+                    <button onClick={openCamera} className="btn btn-secondary text-white">
+                        <FaCamera />
+                    </button>
+                </div>
+                {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `You can now paste the transcribed text in the editor, or extract text from another image.` : `Drag-and-drop an image file, OR, Paste an image from the clipboard to extract text content.`}</div>}
                 <div>{isCollapsed ? "↓ See" : "↑ Hide"} Results</div>
             </div>
         </div>

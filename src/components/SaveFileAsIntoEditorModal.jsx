@@ -3,15 +3,17 @@ import { Modal, Form, Button, ListGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useDatabase } from "../contexts/DatabaseContext";
 import Fuse from "fuse.js";
-function SaveFileAsIntoEditorModal({ show, onHide, currentDoc, content }) {
+function SaveFileAsIntoEditorModal({ show, onHide, content }) {
     const navigate = useNavigate();
-    const { documents, saveDocument } = useDatabase();
+    const { documents, currentDoc, saveDocument } = useDatabase();
     const [documentName, setDocumentName] = useState("");
     const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
 
     useEffect(() => {
         if (currentDoc) {
             setDocumentName(currentDoc.name);
+        } else {
+            setDocumentName("Untitled Document");
         }
     }, [currentDoc, show]);
 
@@ -56,10 +58,6 @@ function SaveFileAsIntoEditorModal({ show, onHide, currentDoc, content }) {
                     return;
                 }
             }
-
-            console.log("Content to save:", content);
-            console.log("Current document:", currentDoc);
-
             const docToSave = {
                 ...(existingDoc || {}),
                 id: existingDoc?.id || crypto.randomUUID(),
@@ -68,9 +66,6 @@ function SaveFileAsIntoEditorModal({ show, onHide, currentDoc, content }) {
                 updatedAt: new Date().toISOString(),
                 createdAt: existingDoc?.createdAt || new Date().toISOString(),
             };
-
-            console.log("Document to save:", docToSave);
-
             const success = await saveDocument(docToSave);
             if (success) {
                 onHide();
