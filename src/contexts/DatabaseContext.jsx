@@ -24,16 +24,23 @@ export const DatabaseProvider = ({ children }) => {
 
         const initDb = async () => {
             try {
-                // Delete the database to start fresh
-                await Dexie.delete("EditorStorage");
-
-                // Create and initialize a new database instance
                 const newDb = createDatabase();
-                await newDb.open();
+
+                // Open the database with version handling
+                await newDb.open().catch("VersionError", async () => {
+                    console.log("Handling version change...");
+                    // If version error, close any existing connections
+                    await Dexie.delete("EditorStorage");
+                    // Recreate and open the database
+                    const freshDb = createDatabase();
+                    await freshDb.open();
+                    return freshDb;
+                });
 
                 if (isMounted) {
                     setDb(newDb);
                     setIsInitialized(true);
+                    setError(null);
                 }
             } catch (error) {
                 console.error("Failed to initialize database:", error);

@@ -33,6 +33,281 @@ const RichTextEditor = ({ className, style, ...props }) => {
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
 
+    // Set initial test content
+    useEffect(() => {
+        const testContent = `
+                <h1>Heading 1</h1>
+                <h2>Heading 2</h2>
+                <h3>Heading 3</h3>
+                <h4>Heading 4</h4>
+                <h5>Heading 5</h5>
+                <h6>Heading 6</h6>
+
+                <p><span class="ql-size-small">Small text</span></p>
+                <p>Normal text</p>
+                <p><span class="ql-size-large">Large text</span></p>
+                <p><span class="ql-size-huge">Huge text</span></p>
+
+                <p>
+                    <strong>Bold</strong>,
+                    <em>Italic</em>,
+                    <u>Underline</u>,
+                    <s>Strikethrough</s>
+                </p>
+
+                <p>
+                    <span style="color: rgb(230, 0, 0);">Red text</span>,
+                    <span style="color: rgb(0, 97, 0);">Green text</span>,
+                    <span style="color: rgb(0, 0, 230);">Blue text</span>
+                </p>
+
+                <p>
+                    <span style="background-color: rgb(255, 255, 0);">Yellow background</span>,
+                    <span style="background-color: rgb(0, 255, 0);">Green background</span>,
+                    <span style="background-color: rgb(0, 255, 255);">Cyan background</span>
+                </p>
+
+                <p>
+                    <span style="font-family: Arial;">Arial font</span>,
+                    <span style="font-family: Times New Roman;">Times New Roman font</span>,
+                    <span style="font-family: Courier New;">Courier New font</span>
+                </p>
+
+                <p class="ql-align-left">Left aligned text</p>
+                <p class="ql-align-center">Center aligned text</p>
+                <p class="ql-align-right">Right aligned text</p>
+                <p class="ql-align-justify">Justified text that spans multiple lines to demonstrate the justification. This text should be long enough to wrap to multiple lines.</p>
+
+                <ol>
+                    <li>First ordered item</li>
+                    <li>Second ordered item</li>
+                    <li>Third ordered item</li>
+                </ol>
+
+                <ul>
+                    <li>First unordered item</li>
+                    <li>Second unordered item</li>
+                    <li>Third unordered item</li>
+                </ul>
+
+                <p class="ql-indent-1">First level indent</p>
+                <p class="ql-indent-2">Second level indent</p>
+                <p class="ql-indent-3">Third level indent</p>
+
+                <blockquote>This is a blockquote. It can contain multiple lines of text and is typically used for quotations.</blockquote>
+
+                <pre class="ql-syntax">This is a code block.
+    function example() {
+        return "Hello, World!";
+    }</pre>
+
+                <p>Text with <sub>subscript</sub> and <sup>superscript</sup></p>
+
+                <p><a href="https://example.com">This is a link</a></p>
+
+                <p>Formula example: E = mc<sup>2</sup></p>
+
+                <h2>Complex Formatting Combinations</h2>
+
+                <p><strong><em><u><span style="color: rgb(230, 0, 0);">Bold, italic, underlined, and red</span></u></em></strong></p>
+
+                <p class="ql-align-center">
+                    <span style="font-family: Arial; background-color: rgb(255, 255, 0);">
+                        <strong><span style="color: rgb(0, 0, 230);">Centered blue bold text with yellow background in Arial</span></strong>
+                    </span>
+                </p>
+
+                <p class="ql-indent-2">
+                    <span style="font-family: Times New Roman;">
+                        <em><span style="color: rgb(128, 0, 128);">Indented purple italic text in Times New Roman with </span></em>
+                        <strong><span style="color: rgb(0, 128, 0);">green bold emphasis</span></strong>
+                    </span>
+                </p>
+
+                <blockquote>
+                    <span style="font-family: Courier New;">
+                        <strong><em><span style="color: rgb(255, 140, 0);">Orange bold italic text in Courier New as a quote</span></em></strong>
+                    </span>
+                </blockquote>
+
+                <p class="ql-align-right">
+                    <span style="background-color: rgb(230, 230, 250);">
+                        <span class="ql-size-large"><strong>Large bold text</strong></span> with
+                        <span class="ql-size-small"><em>small italic text</em></span> and
+                        <span style="color: rgb(220, 20, 60);"><u>crimson underline</u></span>
+                    </span>
+                </p>
+
+                <p class="ql-align-justify">
+                    <span style="font-family: Arial;">
+                        Text with <sup><strong><span style="color: rgb(0, 128, 128);">teal bold superscript</span></strong></sup>
+                        and <sub><em><span style="color: rgb(139, 69, 19);">brown italic subscript</span></em></sub>
+                        in a justified paragraph
+                    </span>
+                </p>
+
+                <p class="ql-indent-1">
+                    <span style="background-color: rgb(240, 230, 140);">
+                        <span style="font-family: Times New Roman;">
+                            <strong><em><s>Bold italic strikethrough</s></em></strong> with
+                            <span style="color: rgb(75, 0, 130);"><u>indigo underline</u></span> and
+                            <span class="ql-size-huge">huge size</span>
+                        </span>
+                    </span>
+                </p>
+
+                <ol>
+                    <li>
+                        <strong><span style="color: rgb(178, 34, 34);">Dark red bold list item</span></strong> with
+                        <span style="background-color: rgb(152, 251, 152);"><em>light green background italic</em></span>
+                    </li>
+                    <li>
+                        <span class="ql-size-large"><span style="color: rgb(25, 25, 112);">Large dark blue text</span></span> with
+                        <sub><span style="color: rgb(219, 112, 147);">pink subscript</span></sub>
+                    </li>
+                </ol>
+
+                <pre class="ql-syntax">
+    <span style="color: rgb(0, 128, 0);">// Green comment in code block</span>
+    <span style="color: rgb(0, 0, 255);">function</span> <span style="color: rgb(128, 0, 0);">complexFormatting</span>() {
+        <span style="color: rgb(0, 0, 255);">return</span> <span style="color: rgb(163, 21, 21);">"Colored code example"</span>;
+    }</pre>
+
+                <h2>Advanced Formatting Examples</h2>
+
+                <div class="ql-align-center">
+                    <h3><span style="background-color: rgb(255, 182, 193);">🎨 Creative Text Effects 🎨</span></h3>
+                </div>
+
+                <p class="ql-align-center">
+                    <span style="font-family: Arial; background-color: rgb(135, 206, 235);">
+                        <span class="ql-size-huge"><strong>R</strong></span><span class="ql-size-large"><strong>A</strong></span><strong>I</strong><span class="ql-size-small"><strong>N</strong></span><span class="ql-size-small"><strong>B</strong></span><strong>O</strong><span class="ql-size-large"><strong>W</strong></span>
+                    </span>
+                </p>
+
+                <p class="ql-align-justify">
+                    <span style="background-color: rgb(255, 228, 196);">
+                        <span style="font-family: Times New Roman;">
+                            <em>Gradient-like effect: </em>
+                            <span style="color: rgb(255, 0, 0);">R</span><span style="color: rgb(255, 127, 0);">a</span><span style="color: rgb(255, 255, 0);">i</span><span style="color: rgb(0, 255, 0);">n</span><span style="color: rgb(0, 0, 255);">b</span><span style="color: rgb(75, 0, 130);">o</span><span style="color: rgb(148, 0, 211);">w</span>
+                        </span>
+                    </span>
+                </p>
+
+                <h4>Nested Lists with Mixed Formatting</h4>
+
+                <ul>
+                    <li>
+                        <strong><span style="color: rgb(186, 85, 211);">Main Topic 1</span></strong>
+                        <ul>
+                            <li><em><span style="color: rgb(147, 112, 219);">Subtopic with purple italic</span></em>
+                                <ul>
+                                    <li><u><span style="color: rgb(138, 43, 226);">Deep nested item with violet underline</span></u></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong><span style="color: rgb(64, 224, 208);">Main Topic 2</span></strong>
+                        <ol>
+                            <li><span style="background-color: rgb(175, 238, 238);">Numbered subtopic with turquoise background</span>
+                                <ul>
+                                    <li><span style="font-family: Courier New;"><code>Mixed list styles with monospace</code></span></li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </li>
+                </ul>
+
+                <h4>Creative Blockquotes</h4>
+
+                <blockquote class="ql-align-center">
+                    <span style="background-color: rgb(230, 230, 250);">
+                        <span class="ql-size-large"><span style="font-family: Arial;">💭 </span></span>
+                        <em><span style="color: rgb(123, 104, 238);">Centered quote with</span></em>
+                        <span class="ql-size-large"><span style="font-family: Arial;"> 💭</span></span>
+                    </span>
+                </blockquote>
+
+                <blockquote class="ql-indent-2">
+                    <span style="background-color: rgb(255, 240, 245);">
+                        <span style="font-family: Times New Roman;">
+                            <strong><span style="color: rgb(199, 21, 133);">Indented quote with</span></strong>
+                            <em><span style="color: rgb(219, 112, 147);"> elegant styling</span></em>
+                        </span>
+                    </span>
+                </blockquote>
+
+                <h4>Mixed Alignment Paragraph</h4>
+
+                <p class="ql-align-left">
+                    <span style="background-color: rgb(240, 255, 240);">
+                        <span style="font-family: Arial;">Left aligned with</span>
+                    </span>
+                </p>
+                <p class="ql-align-center">
+                    <span style="background-color: rgb(255, 240, 245);">
+                        <span class="ql-size-large"><span style="font-family: Times New Roman;">⭐ Centered highlight ⭐</span></span>
+                    </span>
+                </p>
+                <p class="ql-align-right">
+                    <span style="background-color: rgb(240, 248, 255);">
+                        <span style="font-family: Courier New;">Right aligned finish</span>
+                    </span>
+                </p>
+
+                <h4>Technical Formatting</h4>
+
+                <p class="ql-align-justify">
+                    <code><span style="color: rgb(46, 139, 87);">const</span> <span style="color: rgb(25, 25, 112);">formatText</span> = (<span style="color: rgb(165, 42, 42);">text</span>) => {
+                        <span style="color: rgb(0, 0, 139);">return</span> <span style="color: rgb(160, 82, 45);">text.format()</span>;
+                    }</code>
+                </p>
+
+                <p class="ql-indent-1">
+                    <span style="font-family: Courier New;">
+                        <span style="color: rgb(169, 169, 169);">// Variable examples:</span><br/>
+                        <span style="color: rgb(0, 139, 139);">let</span> x = <span style="color: rgb(178, 34, 34);">42</span>;<br/>
+                        <span style="color: rgb(0, 139, 139);">const</span> y = <span style="color: rgb(0, 100, 0);">"string"</span>;
+                    </span>
+                </p>
+
+                <h4>Mathematical Expressions</h4>
+
+                <p class="ql-align-center">
+                    <span style="font-family: Times New Roman;">
+                        <span style="color: rgb(25, 25, 112);">
+                            f(x) = x<sup>2</sup> + 2x + 1
+                        </span>
+                    </span>
+                </p>
+
+                <p class="ql-align-center">
+                    <span style="font-family: Times New Roman;">
+                        <span style="color: rgb(139, 69, 19);">
+                            log<sub>2</sub>(x) = <span style="background-color: rgb(255, 250, 205);">y</span>
+                        </span>
+                    </span>
+                </p>
+
+                <h4>Decorative Dividers</h4>
+
+                <p class="ql-align-center">
+                    <span style="color: rgb(188, 143, 143);">✧･ﾟ</span> <span style="color: rgb(205, 92, 92);">❈</span> <span style="color: rgb(188, 143, 143);">･ﾟ✧</span>
+                </p>
+
+                <p class="ql-align-center">
+                    <span style="color: rgb(176, 196, 222);">════ ⋆★⋆ ════</span>
+                </p>
+
+                <p class="ql-align-center">
+                    <span style="color: rgb(119, 136, 153);">──────────</span>
+                </p>
+            `;
+
+        setValue(testContent);
+    }, []);
+
     // Handle DOCX file upload
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
@@ -329,10 +604,9 @@ const RichTextEditor = ({ className, style, ...props }) => {
                         onChange={setValue}
                         modules={modules}
                         style={{
-                            flex: 1,
+                            height: "100%",
                             display: "flex",
                             flexDirection: "column",
-                            overflow: "hidden",
                         }}
                     />
 
@@ -342,6 +616,76 @@ const RichTextEditor = ({ className, style, ...props }) => {
                     <LoadModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} onLoad={handleLoad} />
                 </div>
             </div>
+            <style>{`
+                .ql-toolbar.ql-snow {
+                    position: sticky;
+                    top: 0;
+                    z-index: 1;
+                    background: #212529;
+                    border: 1px solid white;
+                    border-bottom-color: white;
+                }
+                .ql-toolbar.ql-snow .ql-picker-label {
+                    color: white;
+                    border-color: white;
+                }
+                .ql-toolbar.ql-snow .ql-stroke {
+                    stroke: white;
+                }
+                .ql-toolbar.ql-snow .ql-fill {
+                    fill: white;
+                }
+                .ql-toolbar.ql-snow button:hover .ql-stroke,
+                .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke {
+                    stroke: #adb5bd;
+                }
+                .ql-toolbar.ql-snow button:hover .ql-fill,
+                .ql-toolbar.ql-snow .ql-picker-label:hover .ql-fill {
+                    fill: #adb5bd;
+                }
+                .ql-container.ql-snow {
+                    border: 1px solid white;
+                    flex: 1;
+                    overflow: auto;
+                }
+                .ql-editor {
+                    min-height: 100%;
+                    background: #212529;
+                    color: white;
+                }
+                .ql-picker-options {
+                    background: #343a40 !important;
+                    border: 1px solid white !important;
+                    color: white !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+                }
+                .ql-picker-item {
+                    color: white !important;
+                }
+                .ql-picker-item.ql-selected {
+                    color: #adb5bd !important;
+                    background-color: #495057 !important;
+                }
+                .ql-picker-options .ql-picker-item:hover {
+                    color: #adb5bd !important;
+                    background-color: #495057 !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker-label::before {
+                    color: white !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker-label:hover::before {
+                    color: #adb5bd !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker {
+                    color: white !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker-label {
+                    color: white !important;
+                }
+                .ql-toolbar.ql-snow .ql-picker-label:hover {
+                    color: #adb5bd !important;
+                }
+            `}</style>
         </DatabaseProvider>
     );
 };
