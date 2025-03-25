@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import Tesseract from "tesseract.js";
+
 const OCRImageCapture = ({ className, style, ...props }) => {
     const [imageSrc, setImageSrc] = useState(null);
     const [transcribedText, setTranscribedText] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const language = "eng";
+
     const handlePaste = (event) => {
         const items = event.clipboardData.items;
         let foundImage = false;
@@ -21,16 +23,13 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                     processOCR(file);
                 };
                 reader.readAsDataURL(file);
-                break; // Stop processing after the first image is found
+                break;
             }
         }
 
-        // Allow normal text pasting if no image was found
         if (!foundImage) {
             return;
         }
-
-        // Prevent default behavior ONLY if an image was processed
         event.preventDefault();
     };
 
@@ -44,87 +43,108 @@ const OCRImageCapture = ({ className, style, ...props }) => {
             copyToClipboard(text);
         });
     };
+
     const copyToClipboard = (text) => {
-        navigator.clipboard
-            .writeText(text)
-            .then(() => {
-                console.log("Text copied to clipboard!");
-            })
-            .catch((err) => {
-                console.error("Failed to copy text to clipboard:", err);
-            });
+        navigator.clipboard.writeText(text).then(
+            () => console.log("Text copied to clipboard!"),
+            (err) => console.error("Failed to copy text to clipboard:", err)
+        );
     };
+
     useEffect(() => {
         document.addEventListener("paste", handlePaste);
-        return () => {
-            document.removeEventListener("paste", handlePaste);
-        };
+        return () => document.removeEventListener("paste", handlePaste);
     }, []);
+
     const toggleCollapse = () => {
         setIsCollapsed(!isCollapsed);
     };
+
     return (
-        <>
-            <div className={`row w-100 bg-dark text-white ${className}`} style={{ position: "fixed", top: "0", zIndex: 10, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", ...style }} {...props}>
-                <button
-                    className="border border-dark bg-dark text-white d-flex flex-row align-items-center justify-content-around"
-                    onClick={toggleCollapse}
-                    style={{
-                        cursor: "pointer",
-                        fontSize: "calc(1vh + 0.57vw)",
-                    }}
-                >
-                    {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `Transcribed text is now on your clipboard! You can now paste it in one of the text fields, or paste another image with text to extract other content.` : `Paste an image with text to extract other content.`}</div>}
-                    <div>{isCollapsed ? "↓ See" : "↑ Hide"} Results</div>
-                </button>
-                {!isCollapsed && (
-                    <div className="p-4 bg-dark text-white border border-light">
-                        <div>
-                            {imageSrc ? (
-                                <>
-                                    Pasted Image:
-                                    <div>
-                                        <img src={imageSrc} alt="Pasted" class="img-fluid" className="p-3" style={{ border: "2px dashed #ccc" }} />
-                                    </div>
-                                </>
-                            ) : (
-                                <div>No image pasted yet.</div>
-                            )}
-                            <div>
-                                {isProcessing ? (
-                                    <p>Processing OCR...</p>
-                                ) : (
-                                    <>
-                                        {transcribedText && "Transcribed Text:"}
-                                        <pre
-                                            className="p-3"
-                                            style={{
-                                                backgroundColor: "#f0f0f0",
-                                                color: "#333",
-                                            }}
-                                        >
-                                            {transcribedText}
-                                        </pre>
-                                    </>
-                                )}
-                            </div>
-                            {transcribedText && !isProcessing && (
-                                <>
-                                    Text has been automatically sent to the clipboard!
-                                    <br />
-                                    By some chance you lost it, you can use the button below to copy it again.
-                                    <div>
-                                        <button onClick={() => copyToClipboard(transcribedText)} className="p-2">
-                                            Copy Transcribed Text
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+        <div
+            className={`font-body-5 position-relative col-12 bg-dark text-white border border-white ${className}`}
+            style={{
+                position: "sticky",
+                bottom: "0",
+                zIndex: 10,
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                ...style,
+            }}
+            {...props}
+        >
+            {/* Collapsible Content */}
+            <div
+                className={`p-4 bg-dark text-white border border-light ${isCollapsed ? "d-none" : "d-block"}`}
+                style={{
+                    position: "absolute",
+                    bottom: "100%",
+                    left: "0",
+                    width: "100%",
+                    backgroundColor: "#222",
+                    zIndex: 11,
+                    boxShadow: "0px -4px 10px rgba(0, 0, 0, 0.3)",
+                }}
+            >
+                <div>
+                    {imageSrc ? (
+                        <>
+                            <p>Pasted Image:</p>
+                            <img
+                                src={imageSrc}
+                                alt="Pasted"
+                                className="p-3"
+                                style={{
+                                    objectFit: "contain",
+                                    border: "2px dashed #ccc",
+                                    maxHeight: "25vh",
+                                    maxWidth: "25vw",
+                                }}
+                            />
+                        </>
+                    ) : (
+                        <div>No image pasted yet.</div>
+                    )}
+                    <div>
+                        {isProcessing ? (
+                            <p>Processing OCR...</p>
+                        ) : (
+                            <>
+                                {transcribedText && "Transcribed Text:"}
+                                <pre
+                                    className="p-3"
+                                    style={{
+                                        backgroundColor: "#f0f0f0",
+                                        color: "#333",
+                                    }}
+                                >
+                                    {transcribedText}
+                                </pre>
+                            </>
+                        )}
                     </div>
-                )}
+                    {transcribedText && !isProcessing && (
+                        <>
+                            <p>Text has been automatically sent to the clipboard! If you lost it, you can copy it again below.</p>
+                            <button onClick={() => copyToClipboard(transcribedText)} className="btn btn-light font-body-5 ">
+                                Copy Transcribed Text
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
-        </>
+
+            {/* Collapse Toggle */}
+            <div
+                className="font-body-5 w-100 p-1 border border-dark bg-dark text-white d-flex flex-row align-items-center justify-content-around"
+                onClick={toggleCollapse}
+                style={{
+                    cursor: "pointer",
+                }}
+            >
+                {isProcessing ? <p>Processing OCR...</p> : <div>{transcribedText ? `Transcribed text is now on your clipboard! Paste it in the editor or extract another image.` : `Paste an image with text to extract content.`}</div>}
+                <div>{isCollapsed ? "↓ See" : "↑ Hide"} Results</div>
+            </div>
+        </div>
     );
 };
 

@@ -3,3 +3,21 @@
     padding: 0;
     box-sizing: border-box;
 }
+.font-body-6 {
+    font-size: calc(0.44vh + 0.25vw);
+}
+.font-body-5 {
+    font-size: calc(0.88vh + 0.5vw);
+}
+.font-body-4 {
+    font-size: calc(1.32vh + 0.75vw);
+}
+.font-body-3 {
+    font-size: calc(1.76vh + 1vw);
+}
+.font-body-2 {
+    font-size: calc(2.2vh + 1.25vw);
+}
+.font-body-1 {
+    font-size: calc(2.64vh + 1.5vw);
+}
