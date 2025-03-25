@@ -6,7 +6,6 @@ import { saveAs } from "file-saver"; // Handle file downloads
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Indent } from "docx"; // Generate DOCX
 import SaveModal from "./SaveModal"; // Import SaveModal component
 import LoadModal from "./LoadModal"; // Import LoadModal component
-import { DatabaseProvider } from "../contexts/DatabaseContext"; // Import DatabaseProvider
 
 const modules = {
     toolbar: {
@@ -27,9 +26,12 @@ const modules = {
     },
 };
 
-const RichTextEditor = ({ className, style, ...props }) => {
+const RichTextEditor = ({ className, style, initialValue, ...props }) => {
     const [value, setValue] = useState(() => {
-        // Initialize value from localStorage if available
+        // Use initialValue if provided, otherwise try localStorage
+        if (initialValue !== undefined) {
+            return initialValue;
+        }
         const savedContent = localStorage.getItem("editorContent");
         return savedContent || "";
     });
@@ -37,10 +39,30 @@ const RichTextEditor = ({ className, style, ...props }) => {
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
 
-    // Save content to localStorage whenever it changes
+    // Update value when initialValue changes
     useEffect(() => {
-        localStorage.setItem("editorContent", value);
-    }, [value]);
+        if (initialValue !== undefined) {
+            setValue(initialValue);
+        }
+    }, [initialValue]);
+
+    // Listen for storage changes from other components/tabs
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === "editorContent" && e.newValue !== null) {
+                setValue(e.newValue);
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, []);
+
+    // Save content to localStorage whenever it changes
+    const handleChange = (newValue) => {
+        setValue(newValue);
+        localStorage.setItem("editorContent", newValue);
+    };
 
     // Handle DOCX file upload
     const handleFileUpload = (event) => {
@@ -328,27 +350,25 @@ const RichTextEditor = ({ className, style, ...props }) => {
     };
 
     return (
-        <DatabaseProvider>
-            <div className={`flex-grow-1 d-flex ${className}`} style={{ ...style }} {...props}>
-                <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
-                    <ReactQuill
-                        ref={quillRef}
-                        theme="snow"
-                        value={value}
-                        onChange={setValue}
-                        modules={modules}
-                        style={{
-                            height: "100%",
-                            display: "flex",
-                            flexDirection: "column",
-                        }}
-                    />
+        <div className={`flex-grow-1 d-flex ${className}`} style={{ ...style }} {...props}>
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
+                <ReactQuill
+                    ref={quillRef}
+                    theme="snow"
+                    value={value}
+                    onChange={handleChange}
+                    modules={modules}
+                    style={{
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                />
 
-                    <input type="file" id="docx-upload" accept=".docx" style={{ display: "none" }} onChange={handleFileUpload} />
+                <input type="file" id="docx-upload" accept=".docx" style={{ display: "none" }} onChange={handleFileUpload} />
 
-                    <SaveModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} content={quillRef.current?.getEditor()?.root?.innerHTML || value} />
-                    <LoadModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} onLoad={handleLoad} />
-                </div>
+                <SaveModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} content={quillRef.current?.getEditor()?.root?.innerHTML || value} />
+                <LoadModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} onLoad={handleLoad} />
             </div>
             <style>{`
                 .ql-toolbar.ql-snow {
@@ -420,7 +440,7 @@ const RichTextEditor = ({ className, style, ...props }) => {
                     color: #adb5bd !important;
                 }
             `}</style>
-        </DatabaseProvider>
+        </div>
     );
 };
 

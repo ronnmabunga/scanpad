@@ -118,6 +118,28 @@ export const DatabaseProvider = ({ children }) => {
         }
     }, [isInitialized, db]);
 
+    const loadDocumentById = useCallback(
+        async (id) => {
+            if (!isInitialized || !db) {
+                throw new Error("Database not initialized");
+            }
+
+            setIsLoading(true);
+            setError(null);
+            try {
+                const doc = await db.documents.get(parseInt(id));
+                return doc;
+            } catch (error) {
+                console.error("Error loading document:", error);
+                setError(error.message || "Failed to load document");
+                return null;
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [isInitialized, db]
+    );
+
     const deleteDocument = useCallback(
         async (id) => {
             if (!isInitialized || !db) {
@@ -146,6 +168,7 @@ export const DatabaseProvider = ({ children }) => {
         isInitialized,
         saveDocument,
         loadDocuments,
+        loadDocumentById,
         deleteDocument,
     };
 
