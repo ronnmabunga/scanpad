@@ -28,10 +28,19 @@ const modules = {
 };
 
 const RichTextEditor = ({ className, style, ...props }) => {
-    const [value, setValue] = useState("");
+    const [value, setValue] = useState(() => {
+        // Initialize value from localStorage if available
+        const savedContent = localStorage.getItem("editorContent");
+        return savedContent || "";
+    });
     const quillRef = useRef(null);
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
+
+    // Save content to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem("editorContent", value);
+    }, [value]);
 
     // Handle DOCX file upload
     const handleFileUpload = (event) => {
