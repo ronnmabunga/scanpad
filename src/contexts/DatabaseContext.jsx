@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import Dexie from "dexie";
+import { v4 as uuidv4 } from "uuid";
 
 const DatabaseContext = createContext(null);
 
 // Create a function to initialize a new database instance
 const createDatabase = () => {
     const db = new Dexie("EditorStorage");
-    db.version(2).stores({
-        documents: "++id, name, content, timestamp",
+    db.version(3).stores({
+        documents: "id, name, content, timestamp",
     });
     return db;
 };
@@ -26,16 +27,26 @@ export const DatabaseProvider = ({ children }) => {
             try {
                 const newDb = createDatabase();
 
-                // Open the database with version handling
-                await newDb.open().catch("VersionError", async () => {
-                    console.log("Handling version change...");
-                    // If version error, close any existing connections
-                    await Dexie.delete("EditorStorage");
-                    // Recreate and open the database
-                    const freshDb = createDatabase();
-                    await freshDb.open();
-                    return freshDb;
-                });
+                try {
+                    // Try to open the new database
+                    await newDb.open();
+                } catch (openError) {
+                    console.error("Error opening database:", openError);
+                    // If it's a version error, we need to handle the upgrade
+                    if (openError.name === "VersionError") {
+                        // Delete the database and recreate it with the new schema
+                        await Dexie.delete("EditorStorage");
+                        const freshDb = createDatabase();
+                        await freshDb.open();
+                        if (isMounted) {
+                            setDb(freshDb);
+                            setIsInitialized(true);
+                            setError(null);
+                        }
+                        return;
+                    }
+                    throw openError;
+                }
 
                 if (isMounted) {
                     setDb(newDb);
@@ -79,19 +90,22 @@ export const DatabaseProvider = ({ children }) => {
                         content,
                         timestamp,
                     });
+                    return existingDoc.id;
                 } else {
-                    // Create new document
+                    // Create new document with UUID
+                    const id = uuidv4();
                     await db.documents.add({
+                        id,
                         name: name.trim(),
                         content,
                         timestamp,
                     });
+                    return id;
                 }
-                return true;
             } catch (error) {
                 console.error("Error saving document:", error);
                 setError(error.message || "Failed to save document");
-                return false;
+                return null;
             } finally {
                 setIsLoading(false);
             }
@@ -127,7 +141,7 @@ export const DatabaseProvider = ({ children }) => {
             setIsLoading(true);
             setError(null);
             try {
-                const doc = await db.documents.get(parseInt(id));
+                const doc = await db.documents.get(id);
                 return doc;
             } catch (error) {
                 console.error("Error loading document:", error);
