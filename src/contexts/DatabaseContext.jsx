@@ -1,200 +1,104 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import Dexie from "dexie";
-import { v4 as uuidv4 } from "uuid";
 
-const DatabaseContext = createContext(null);
+const DatabaseContext = createContext();
 
-// Create a function to initialize a new database instance
-const createDatabase = () => {
-    const db = new Dexie("EditorStorage");
-    db.version(3).stores({
-        documents: "id, name, content, timestamp",
-    });
-    return db;
-};
+export function useDatabase() {
+    return useContext(DatabaseContext);
+}
 
-export const DatabaseProvider = ({ children }) => {
-    const [isLoading, setIsLoading] = useState(false);
+export function DatabaseProvider({ children }) {
+    const [documents, setDocuments] = useState([]);
+    const [currentDoc, setCurrentDoc] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isInitialized, setIsInitialized] = useState(false);
     const [db, setDb] = useState(null);
 
-    // Initialize database
     useEffect(() => {
-        let isMounted = true;
-
-        const initDb = async () => {
+        const initDB = async () => {
             try {
-                const newDb = createDatabase();
+                const newDb = new Dexie("EditorStorage");
+                newDb.version(1).stores({
+                    documents: "id, name, content, timestamp",
+                });
+                await newDb.open();
+                setDb(newDb);
 
-                try {
-                    // Try to open the new database
-                    await newDb.open();
-                } catch (openError) {
-                    console.error("Error opening database:", openError);
-                    // If it's a version error, we need to handle the upgrade
-                    if (openError.name === "VersionError") {
-                        // Delete the database and recreate it with the new schema
-                        await Dexie.delete("EditorStorage");
-                        const freshDb = createDatabase();
-                        await freshDb.open();
-                        if (isMounted) {
-                            setDb(freshDb);
-                            setIsInitialized(true);
-                            setError(null);
-                        }
-                        return;
-                    }
-                    throw openError;
+                // Load documents after DB initialization
+                const docs = await newDb.documents.orderBy("timestamp").reverse().toArray();
+                setDocuments(docs);
+                if (docs.length > 0) {
+                    setCurrentDoc(docs[0]);
                 }
 
-                if (isMounted) {
-                    setDb(newDb);
-                    setIsInitialized(true);
-                    setError(null);
-                }
-            } catch (error) {
-                console.error("Failed to initialize database:", error);
-                if (isMounted) {
-                    setError("Failed to initialize database. Please refresh the page.");
-                }
+                setIsLoading(false);
+            } catch (err) {
+                console.error("Error initializing database:", err);
+                setError(err);
+                setIsLoading(false);
             }
         };
 
-        initDb();
+        initDB();
 
         return () => {
-            isMounted = false;
             if (db) {
                 db.close();
             }
         };
     }, []);
 
-    const saveDocument = useCallback(
-        async (name, content) => {
-            if (!isInitialized || !db) {
-                throw new Error("Database not initialized");
-            }
-
-            setIsLoading(true);
-            setError(null);
-            try {
-                const timestamp = new Date().toISOString();
-                // First, try to find an existing document with the same name
-                const existingDoc = await db.documents.where("name").equals(name.trim()).first();
-
-                if (existingDoc) {
-                    // Update existing document
-                    await db.documents.update(existingDoc.id, {
-                        content,
-                        timestamp,
-                    });
-                    return existingDoc.id;
-                } else {
-                    // Create new document with UUID
-                    const id = uuidv4();
-                    await db.documents.add({
-                        id,
-                        name: name.trim(),
-                        content,
-                        timestamp,
-                    });
-                    return id;
-                }
-            } catch (error) {
-                console.error("Error saving document:", error);
-                setError(error.message || "Failed to save document");
-                return null;
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [isInitialized, db]
-    );
-
-    const loadDocuments = useCallback(async () => {
-        if (!isInitialized || !db) {
-            throw new Error("Database not initialized");
-        }
-
-        setIsLoading(true);
-        setError(null);
+    const saveDocument = async (doc) => {
         try {
-            const docs = await db.documents.orderBy("timestamp").reverse().toArray();
-            return docs;
-        } catch (error) {
-            console.error("Error loading documents:", error);
-            setError(error.message || "Failed to load documents");
-            return [];
+            setIsLoading(true);
+            await db.documents.put(doc);
+
+            // Update local state
+            const updatedDocs = await db.documents.orderBy("timestamp").reverse().toArray();
+            setDocuments(updatedDocs);
+            setCurrentDoc(doc);
+
+            return true;
+        } catch (err) {
+            console.error("Error saving document:", err);
+            setError(err);
+            return false;
         } finally {
             setIsLoading(false);
         }
-    }, [isInitialized, db]);
+    };
 
-    const loadDocumentById = useCallback(
-        async (id) => {
-            if (!isInitialized || !db) {
-                throw new Error("Database not initialized");
-            }
-
+    const deleteDocument = async (docId) => {
+        try {
             setIsLoading(true);
-            setError(null);
-            try {
-                const doc = await db.documents.get(id);
-                return doc;
-            } catch (error) {
-                console.error("Error loading document:", error);
-                setError(error.message || "Failed to load document");
-                return null;
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [isInitialized, db]
-    );
+            await db.documents.delete(docId);
 
-    const deleteDocument = useCallback(
-        async (id) => {
-            if (!isInitialized || !db) {
-                throw new Error("Database not initialized");
+            // Update local state
+            const updatedDocs = await db.documents.orderBy("timestamp").reverse().toArray();
+            setDocuments(updatedDocs);
+            if (currentDoc?.id === docId) {
+                setCurrentDoc(updatedDocs[0] || null);
             }
 
-            setIsLoading(true);
-            setError(null);
-            try {
-                await db.documents.delete(id);
-                return true;
-            } catch (error) {
-                console.error("Error deleting document:", error);
-                setError(error.message || "Failed to delete document");
-                return false;
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [isInitialized, db]
-    );
+            return true;
+        } catch (err) {
+            console.error("Error deleting document:", err);
+            setError(err);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const value = {
+        documents,
+        currentDoc,
+        setCurrentDoc,
         isLoading,
         error,
-        isInitialized,
         saveDocument,
-        loadDocuments,
-        loadDocumentById,
         deleteDocument,
     };
 
     return <DatabaseContext.Provider value={value}>{children}</DatabaseContext.Provider>;
-};
-
-export const useDatabase = () => {
-    const context = useContext(DatabaseContext);
-    if (!context) {
-        throw new Error("useDatabase must be used within a DatabaseProvider");
-    }
-    return context;
-};
-
-export default DatabaseContext;
+}

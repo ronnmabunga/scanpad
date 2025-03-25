@@ -1,38 +1,45 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor";
+import PageFileNotFound from "./PageFileNotFound";
 import { useDatabase } from "../contexts/DatabaseContext";
 
 function PageEditor() {
     const { fileId } = useParams();
-    const { loadDocumentById, isInitialized } = useDatabase();
-    const [initialContent, setInitialContent] = useState("");
+    const { documents, currentDoc, setCurrentDoc } = useDatabase();
+    const [isNotFound, setIsNotFound] = useState(false);
 
     useEffect(() => {
-        const loadContent = async () => {
-            if (fileId) {
-                // Load content from database if fileId is provided
-                const doc = await loadDocumentById(fileId);
-                if (doc) {
-                    setInitialContent(doc.content);
-                }
+        if (fileId) {
+            const doc = documents.find((d) => d.id === fileId);
+            if (doc) {
+                setCurrentDoc(doc);
+                setIsNotFound(false);
             } else {
-                // Load content from localStorage if no fileId
-                const savedContent = localStorage.getItem("editorContent");
-                setInitialContent(savedContent || "");
+                setIsNotFound(true);
             }
-        };
-
-        if (isInitialized) {
-            loadContent();
+        } else {
+            // If no fileId, create a new untitled document
+            setCurrentDoc({
+                id: null,
+                name: "Untitled Document",
+                content: "",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
+            setIsNotFound(false);
         }
-    }, [fileId, isInitialized, loadDocumentById]);
+    }, [fileId, documents, setCurrentDoc]);
+
+    if (isNotFound) {
+        return <PageFileNotFound />;
+    }
 
     return (
         <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
             <div className="row m-0" style={{ height: "100%" }}>
                 <div className="col-12 p-0" style={{ height: "100%" }}>
-                    <RichTextEditor style={{ height: "100%" }} initialValue={initialContent} />
+                    <RichTextEditor style={{ height: "100%" }} currentDoc={currentDoc} />
                 </div>
             </div>
         </div>

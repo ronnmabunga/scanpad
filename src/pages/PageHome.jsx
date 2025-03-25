@@ -1,8 +1,11 @@
 import OCRImageCapture from "../components/OCRImageCapture";
 import RichTextEditor from "../components/RichTextEditor";
 import { Navbar, Container } from "react-bootstrap";
+import { useDatabase } from "../contexts/DatabaseContext";
 
 function PageHome() {
+    const { currentDoc } = useDatabase();
+
     return (
         <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
             <div className="row m-0" style={{ height: "10%" }}>
@@ -20,7 +23,7 @@ function PageHome() {
                 <div className="col-12 col-sm-6 col-md-5 col-lg-7 col-xl-8 bg-black text-white py-3" style={{ height: "100%" }}>
                     <div className="d-flex flex-column h-100">
                         <div className="flex-grow-1" style={{ overflow: "auto" }}>
-                            <RichTextEditor style={{ height: "100%" }} />
+                            <RichTextEditor style={{ height: "100%" }} currentDoc={currentDoc} />
                         </div>
                         <div style={{ height: "10%" }}>
                             <OCRImageCapture style={{ height: "100%" }} />
