@@ -16,7 +16,7 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
     const language = "eng";
 
     useEffect(() => {
-        console.log("OCRImageCapture - autoPasteOCR prop changed:", autoPasteOCR);
+        // console.log("OCRImageCapture - autoPasteOCR prop changed:", autoPasteOCR);
         autoPasteOCRRef.current = autoPasteOCR;
     }, [autoPasteOCR]);
 
@@ -111,22 +111,22 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
         }).then(({ data: { text } }) => {
             setIsProcessing(false);
             setTranscribedText(text);
-            console.log("OCRImageCapture - Processing OCR with autoPasteOCR:", autoPasteOCRRef.current);
+            // console.log("OCRImageCapture - Processing OCR with autoPasteOCR:", autoPasteOCRRef.current);
 
             const quillEditor = getQuillEditor();
-            console.log("OCRImageCapture - Quill editor available:", !!quillEditor);
+            // console.log("OCRImageCapture - Quill editor available:", !!quillEditor);
 
             if (autoPasteOCRRef.current && quillEditor) {
-                console.log("OCRImageCapture - Attempting to insert text using Quill editor");
+                // console.log("OCRImageCapture - Attempting to insert text using Quill editor");
                 try {
                     const range = quillEditor.getSelection();
-                    console.log("OCRImageCapture - Current selection range:", range);
+                    // console.log("OCRImageCapture - Current selection range:", range);
 
                     if (range) {
-                        console.log("OCRImageCapture - Inserting at cursor position:", range.index);
+                        // console.log("OCRImageCapture - Inserting at cursor position:", range.index);
                         quillEditor.insertText(range.index, text);
                     } else {
-                        console.log("OCRImageCapture - No selection, inserting at end");
+                        // console.log("OCRImageCapture - No selection, inserting at end");
                         quillEditor.insertText(quillEditor.getLength(), text);
                     }
                 } catch (error) {
@@ -134,7 +134,7 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
                     copyToClipboard(text);
                 }
             } else {
-                console.log("OCRImageCapture - Copying text to clipboard");
+                // console.log("OCRImageCapture - Copying text to clipboard");
                 copyToClipboard(text);
             }
         });

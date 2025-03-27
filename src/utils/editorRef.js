@@ -2,11 +2,11 @@
 let quillEditorInstance = null;
 
 export const setQuillEditor = (editor) => {
-    console.log("Setting Quill editor instance:", !!editor);
+    // console.log("Setting Quill editor instance:", !!editor);
     quillEditorInstance = editor;
 };
 
 export const getQuillEditor = () => {
-    console.log("Getting Quill editor instance:", !!quillEditorInstance);
+    // console.log("Getting Quill editor instance:", !!quillEditorInstance);
     return quillEditorInstance;
 };

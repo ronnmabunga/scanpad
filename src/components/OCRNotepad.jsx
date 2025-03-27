@@ -9,12 +9,12 @@ function OCRNotepad({ className, style, showHomeLink = false, ...props }) {
     });
 
     useEffect(() => {
-        console.log("OCRNotepad - autoPasteOCR changed:", autoPasteOCR);
+        // console.log("OCRNotepad - autoPasteOCR changed:", autoPasteOCR);
         localStorage.setItem("autoPasteOCR", JSON.stringify(autoPasteOCR));
     }, [autoPasteOCR]);
 
     const handleAutoPasteOCRChange = (value) => {
-        console.log("OCRNotepad - handleAutoPasteOCRChange called with:", value);
+        // console.log("OCRNotepad - handleAutoPasteOCRChange called with:", value);
         setAutoPasteOCR(value);
     };
 

@@ -39,13 +39,13 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
     const [lastSavedContent, setLastSavedContent] = useState(currentDoc?.content || "");
 
     useEffect(() => {
-        console.log("RichTextEditor - autoPasteOCR prop changed:", autoPasteOCR);
         if (quillRef.current) {
-            const quill = quillRef.current.getEditor();
-            console.log("RichTextEditor - Quill editor available:", !!quill);
-        } else {
-            console.log("RichTextEditor - Quill editor not available (quillRef.current is null)");
+            quillRef.current.getEditor();
+            // console.log("RichTextEditor - Quill editor available:", !!quill);
         }
+        // else {
+        //     console.log("RichTextEditor - Quill editor not available (quillRef.current is null)");
+        // }
     }, [autoPasteOCR]);
 
     useEffect(() => {
@@ -72,7 +72,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
     useEffect(() => {
         if (quillRef.current) {
             const quill = quillRef.current.getEditor();
-            console.log("RichTextEditor - Setting Quill editor instance:", !!quill);
+            // console.log("RichTextEditor - Setting Quill editor instance:", !!quill);
             setQuillEditor(quill);
         }
     }, [quillRef.current]);
@@ -656,7 +656,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                             id="autoPasteOCR"
                                             checked={autoPasteOCR}
                                             onChange={(e) => {
-                                                console.log("RichTextEditor - Checkbox changed:", e.target.checked);
+                                                // console.log("RichTextEditor - Checkbox changed:", e.target.checked);
                                                 onAutoPasteOCRChange?.(e.target.checked);
                                             }}
                                         />
@@ -683,7 +683,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                         flexDirection: "column",
                     }}
                     onInit={(quill) => {
-                        console.log("RichTextEditor - Quill editor initialized");
+                        // console.log("RichTextEditor - Quill editor initialized");
                         setQuillEditor(quill);
                     }}
                 />
