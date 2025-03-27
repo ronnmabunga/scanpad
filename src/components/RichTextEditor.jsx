@@ -20,7 +20,15 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
     const navigate = useNavigate();
     const { saveDocument, currentDoc, setCurrentDoc } = useDatabase();
     const quillRef = useRef(null);
-    const [content, setContent] = useState(currentDoc?.content || "");
+    const [content, setContent] = useState(() => {
+        // If there's a current document, use its content
+        if (currentDoc?.content) {
+            return currentDoc.content;
+        }
+        // Otherwise, try to load from localStorage
+        const savedContent = localStorage.getItem("editorContent");
+        return savedContent || "";
+    });
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [showSaveAsModal, setShowSaveAsModal] = useState(false);
     const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
@@ -42,6 +50,13 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
             setLastSavedContent(currentDoc.content);
         }
     }, [currentDoc]);
+
+    // Save content to localStorage whenever it changes
+    useEffect(() => {
+        if (!currentDoc) {
+            localStorage.setItem("editorContent", content);
+        }
+    }, [content, currentDoc]);
 
     // Add effect to ensure Quill editor is initialized
     useEffect(() => {
