@@ -265,7 +265,7 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
 
             {/* Collapse Toggle */}
             <div
-                className="font-body-5 w-100 p-1 border border-dark bg-dark text-white d-flex flex-row align-items-center justify-content-around"
+                className="font-body-5 w-100 p-1 border border-light bg-dark text-white d-flex flex-row align-items-center justify-content-around"
                 onClick={toggleCollapse}
                 style={{
                     cursor: "pointer",

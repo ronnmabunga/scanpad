@@ -5,7 +5,7 @@ import RichTextEditor from "./RichTextEditor";
 function OCRNotepad({ className, style, showHomeLink = false, ...props }) {
     const [autoPasteOCR, setAutoPasteOCR] = useState(() => {
         const saved = localStorage.getItem("autoPasteOCR");
-        return saved ? JSON.parse(saved) : false;
+        return saved ? JSON.parse(saved) : true;
     });
 
     useEffect(() => {
