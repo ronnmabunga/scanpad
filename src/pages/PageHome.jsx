@@ -1,5 +1,4 @@
-import OCRImageCapture from "../components/OCRImageCapture";
-import RichTextEditor from "../components/RichTextEditor";
+import OCRNotepad from "../components/OCRNotepad";
 import { Navbar, Container } from "react-bootstrap";
 
 function PageHome() {
@@ -18,14 +17,7 @@ function PageHome() {
                     <p className="font-body-4">Paste an image from the clipboard onto this window, after the app transcribes the image, paste again on the editor body to get the transcribed text.</p>
                 </div>
                 <div className="col-12 col-sm-6 col-md-5 col-lg-7 col-xl-8 bg-black text-white py-3" style={{ height: "100%" }}>
-                    <div className="d-flex flex-column h-100">
-                        <div className="flex-grow-1" style={{ overflow: "auto" }}>
-                            <RichTextEditor style={{ height: "100%" }} />
-                        </div>
-                        <div style={{ height: "10%" }}>
-                            <OCRImageCapture style={{ height: "100%" }} />
-                        </div>
-                    </div>
+                    <OCRNotepad style={{ height: "100%" }} />
                 </div>
             </div>
         </div>

@@ -1,15 +1,21 @@
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Navbar, Nav, NavDropdown, Modal, Button } from "react-bootstrap";
 import { useState, useEffect, useRef } from "react";
 import LoadFileIntoEditorModal from "./LoadFileIntoEditorModal";
 import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
+import { setQuillEditor } from "../utils/editorRef";
 
-function RichTextEditor({ className, style, ...props }) {
-    const location = useLocation();
+// Register Quill modules
+const Quill = ReactQuill.Quill;
+const icons = Quill.import("ui/icons");
+icons["undo"] = '<i class="bi bi-arrow-counterclockwise"></i>';
+icons["redo"] = '<i class="bi bi-arrow-clockwise"></i>';
+
+function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, showHomeLink = false, ...props }) {
     const navigate = useNavigate();
     const { saveDocument, currentDoc, setCurrentDoc } = useDatabase();
     const quillRef = useRef(null);
@@ -18,7 +24,17 @@ function RichTextEditor({ className, style, ...props }) {
     const [showSaveAsModal, setShowSaveAsModal] = useState(false);
     const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
     const [lastSavedContent, setLastSavedContent] = useState(currentDoc?.content || "");
-    useEffect(() => {}, [currentDoc]);
+
+    useEffect(() => {
+        console.log("RichTextEditor - autoPasteOCR prop changed:", autoPasteOCR);
+        if (quillRef.current) {
+            const quill = quillRef.current.getEditor();
+            console.log("RichTextEditor - Quill editor available:", !!quill);
+        } else {
+            console.log("RichTextEditor - Quill editor not available (quillRef.current is null)");
+        }
+    }, [autoPasteOCR]);
+
     useEffect(() => {
         if (currentDoc) {
             setContent(currentDoc.content);
@@ -26,15 +42,22 @@ function RichTextEditor({ className, style, ...props }) {
         }
     }, [currentDoc]);
 
+    // Add effect to ensure Quill editor is initialized
+    useEffect(() => {
+        if (quillRef.current) {
+            const quill = quillRef.current.getEditor();
+            console.log("RichTextEditor - Setting Quill editor instance:", !!quill);
+            setQuillEditor(quill);
+        }
+    }, [quillRef.current]);
+
     const modules = {
         toolbar: {
-            container: [[{ header: [1, 2, 3, 4, 5, 6, false] }], [{ size: ["small", false, "large", "huge"] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ font: [] }], [{ align: [] }], [{ list: "ordered" }, { list: "bullet" }], [{ indent: "-1" }, { indent: "+1" }], ["blockquote", "code-block"], [{ script: "sub" }, { script: "super" }], ["link", "image", "video", "formula"], ["clean"]],
+            container: [[{ header: [1, 2, 3, 4, 5, 6, false] }], [{ size: ["small", false, "large", "huge"] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ font: [] }], [{ align: [] }], [{ list: "ordered" }, { list: "bullet" }], [{ indent: "-1" }, { indent: "+1" }], ["blockquote", "code-block"], [{ script: "sub" }, { script: "super" }], ["link", "image", "video", "formula"], ["clean"], ["undo", "redo"]],
         },
     };
 
     const formats = ["header", "size", "bold", "italic", "underline", "strike", "color", "background", "font", "align", "list", "bullet", "indent", "blockquote", "code-block", "script", "link", "image", "video", "formula", "clean"];
-
-    const isHomePage = location.pathname === "/";
 
     const normalizeContent = (str) => {
         if (!str || str.trim() === "") return "";
@@ -131,7 +154,7 @@ function RichTextEditor({ className, style, ...props }) {
                 <Navbar bg="dark" variant="dark" className="px-3" style={{ border: "1px solid white" }}>
                     <div className="d-flex w-100">
                         <Nav className="me-auto">
-                            {!isHomePage && (
+                            {showHomeLink && (
                                 <Nav.Link onClick={() => navigate("/")} className="text-white">
                                     Home
                                 </Nav.Link>
@@ -151,6 +174,21 @@ function RichTextEditor({ className, style, ...props }) {
                             </span>
                         </div>
                         <div className="d-flex align-items-center ms-auto">
+                            <div className="form-check form-switch me-3">
+                                <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id="autoPasteOCR"
+                                    checked={autoPasteOCR}
+                                    onChange={(e) => {
+                                        console.log("RichTextEditor - Checkbox changed:", e.target.checked);
+                                        onAutoPasteOCRChange?.(e.target.checked);
+                                    }}
+                                />
+                                <label className="form-check-label text-white" htmlFor="autoPasteOCR">
+                                    Auto-paste OCR
+                                </label>
+                            </div>
                             <span className="text-white">{normalizeContent(content) !== normalizeContent(lastSavedContent) ? <i className="bi bi-save text-danger"></i> : <i className="bi bi-check-circle text-success"></i>}</span>
                         </div>
                     </div>
@@ -168,6 +206,10 @@ function RichTextEditor({ className, style, ...props }) {
                         height: "calc(100% - 56px)",
                         display: "flex",
                         flexDirection: "column",
+                    }}
+                    onInit={(quill) => {
+                        console.log("RichTextEditor - Quill editor initialized");
+                        setQuillEditor(quill);
                     }}
                 />
             </div>
@@ -288,6 +330,18 @@ function RichTextEditor({ className, style, ...props }) {
                 }
                 .dropdown-toggle:hover, .dropdown-toggle:focus {
                     color: white !important;
+                }
+                .form-check-input {
+                    background-color: #495057;
+                    border-color: #6c757d;
+                }
+                .form-check-input:checked {
+                    background-color: #0d6efd;
+                    border-color: #0d6efd;
+                }
+                .form-check-input:focus {
+                    border-color: #0d6efd;
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
                 }
             `}</style>
         </div>

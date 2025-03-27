@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import RichTextEditor from "../components/RichTextEditor";
+import OCRNotepad from "../components/OCRNotepad";
 import PageFileNotFound from "./PageFileNotFound";
 import { useDatabase } from "../contexts/DatabaseContext";
-import OCRImageCapture from "../components/OCRImageCapture";
+
 function PageEditor() {
     const { fileId } = useParams();
     const { documents, setCurrentDoc } = useDatabase();
@@ -41,14 +41,7 @@ function PageEditor() {
         <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
             <div className="row m-0" style={{ height: "100%" }}>
                 <div className="col-12 p-0" style={{ height: "100%" }}>
-                    <div className="d-flex flex-column h-100">
-                        <div className="flex-grow-1" style={{ overflow: "auto" }}>
-                            <RichTextEditor style={{ height: "100%" }} />
-                        </div>
-                        <div style={{ height: "10%" }}>
-                            <OCRImageCapture style={{ height: "100%" }} />
-                        </div>
-                    </div>
+                    <OCRNotepad style={{ height: "100%" }} showHomeLink={true} />
                 </div>
             </div>
         </div>

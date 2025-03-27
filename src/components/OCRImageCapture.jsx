@@ -1,16 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import Tesseract from "tesseract.js";
 import { Modal, Button } from "react-bootstrap";
-import { FaCamera, FaUpload } from "react-icons/fa";
+import { FaCamera, FaUpload, FaExchangeAlt } from "react-icons/fa";
+import { getQuillEditor } from "../utils/editorRef";
 
-const OCRImageCapture = ({ className, style, ...props }) => {
+const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
     const [imageSrc, setImageSrc] = useState(null);
     const [transcribedText, setTranscribedText] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [isFrontCamera, setIsFrontCamera] = useState(true);
     const videoRef = useRef(null);
+    const autoPasteOCRRef = useRef(autoPasteOCR);
     const language = "eng";
+
+    useEffect(() => {
+        console.log("OCRImageCapture - autoPasteOCR prop changed:", autoPasteOCR);
+        autoPasteOCRRef.current = autoPasteOCR;
+    }, [autoPasteOCR]);
 
     const handlePaste = (event) => {
         const items = event.clipboardData.items;
@@ -67,11 +75,19 @@ const OCRImageCapture = ({ className, style, ...props }) => {
     const openCamera = async () => {
         setIsCameraOpen(true);
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: isFrontCamera ? "user" : "environment" } });
             videoRef.current.srcObject = stream;
         } catch (error) {
             console.error("Error accessing camera:", error);
         }
+    };
+
+    const switchCamera = async () => {
+        setIsFrontCamera(!isFrontCamera);
+        if (videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+        }
+        openCamera();
     };
 
     const capturePhoto = () => {
@@ -95,7 +111,32 @@ const OCRImageCapture = ({ className, style, ...props }) => {
         }).then(({ data: { text } }) => {
             setIsProcessing(false);
             setTranscribedText(text);
-            copyToClipboard(text);
+            console.log("OCRImageCapture - Processing OCR with autoPasteOCR:", autoPasteOCRRef.current);
+
+            const quillEditor = getQuillEditor();
+            console.log("OCRImageCapture - Quill editor available:", !!quillEditor);
+
+            if (autoPasteOCRRef.current && quillEditor) {
+                console.log("OCRImageCapture - Attempting to insert text using Quill editor");
+                try {
+                    const range = quillEditor.getSelection();
+                    console.log("OCRImageCapture - Current selection range:", range);
+
+                    if (range) {
+                        console.log("OCRImageCapture - Inserting at cursor position:", range.index);
+                        quillEditor.insertText(range.index, text);
+                    } else {
+                        console.log("OCRImageCapture - No selection, inserting at end");
+                        quillEditor.insertText(quillEditor.getLength(), text);
+                    }
+                } catch (error) {
+                    console.error("OCRImageCapture - Error inserting text:", error);
+                    copyToClipboard(text);
+                }
+            } else {
+                console.log("OCRImageCapture - Copying text to clipboard");
+                copyToClipboard(text);
+            }
         });
     };
 
@@ -119,6 +160,13 @@ const OCRImageCapture = ({ className, style, ...props }) => {
 
     const toggleCollapse = () => {
         setIsCollapsed(!isCollapsed);
+    };
+
+    const handleCloseCamera = () => {
+        if (videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+        }
+        setIsCameraOpen(false);
     };
 
     return (
@@ -195,7 +243,7 @@ const OCRImageCapture = ({ className, style, ...props }) => {
             </div>
 
             {/* Camera Modal */}
-            <Modal show={isCameraOpen} onHide={() => setIsCameraOpen(false)}>
+            <Modal show={isCameraOpen} onHide={handleCloseCamera}>
                 <Modal.Header closeButton>
                     <Modal.Title>Camera</Modal.Title>
                 </Modal.Header>
@@ -203,8 +251,11 @@ const OCRImageCapture = ({ className, style, ...props }) => {
                     <video ref={videoRef} autoPlay style={{ maxWidth: "100%" }} />
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setIsCameraOpen(false)}>
+                    <Button variant="secondary" onClick={handleCloseCamera}>
                         Close
+                    </Button>
+                    <Button variant="primary" onClick={switchCamera}>
+                        <FaExchangeAlt /> Switch Camera
                     </Button>
                     <Button variant="primary" onClick={capturePhoto}>
                         Capture Photo
