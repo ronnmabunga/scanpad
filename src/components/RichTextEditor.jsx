@@ -97,7 +97,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                     // "formula",
                 ],
                 ["clean"],
-                ["undo", "redo"],
+                // ["undo", "redo"],
             ],
         },
     };
