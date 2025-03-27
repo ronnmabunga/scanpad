@@ -182,8 +182,28 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
 
             // Get all text content, preserving formatting
             const paragraphs = [];
-            tempDiv.childNodes.forEach((node) => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
+            let currentListLevel = 0;
+            let currentListType = null; // 'ordered' or 'unordered'
+
+            const processNode = (node, inheritedStyle = {}, inheritedIndent = 0) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    if (node.textContent.trim()) {
+                        return [
+                            new TextRun({
+                                text: node.textContent,
+                                ...inheritedStyle,
+                            }),
+                        ];
+                    }
+                    return [];
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const children = [];
+                    const nodeStyle = { ...inheritedStyle };
+                    let indent = inheritedIndent;
+
+                    // Get classes for the node
+                    const classes = node.className.split(" ");
+
                     // Check for heading level
                     let headingLevel;
                     const tagName = node.tagName.toLowerCase();
@@ -192,7 +212,6 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                         headingLevel = parseInt(tagMatch[1]);
                     } else {
                         // Check Quill's header classes
-                        const classes = node.className.split(" ");
                         const headerClass = classes.find((cls) => cls.startsWith("ql-header-"));
                         if (headerClass) {
                             const level = headerClass.replace("ql-header-", "");
@@ -200,85 +219,141 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                         }
                     }
 
-                    const children = [];
-                    let currentStyle = {};
+                    // Handle font size
+                    const sizeClass = node.className.split(" ").find((cls) => cls.startsWith("ql-size-"));
+                    if (sizeClass) {
+                        const size = sizeClass.replace("ql-size-", "");
+                        const sizeMap = {
+                            small: 16,
+                            normal: 24,
+                            large: 36,
+                            huge: 48,
+                        };
+                        nodeStyle.size = sizeMap[size] || 24;
+                    }
 
-                    // Process each child node
-                    const processNode = (node, inheritedStyle = {}) => {
-                        if (node.nodeType === Node.TEXT_NODE) {
-                            if (node.textContent.trim()) {
-                                children.push(
-                                    new TextRun({
-                                        text: node.textContent,
-                                        ...inheritedStyle,
-                                    })
-                                );
-                            }
-                        } else if (node.nodeType === Node.ELEMENT_NODE) {
-                            // Create a new style object that inherits from parent
-                            const nodeStyle = { ...inheritedStyle };
-
-                            // Handle font size
-                            const sizeClass = node.className.split(" ").find((cls) => cls.startsWith("ql-size-"));
-                            if (sizeClass) {
-                                const size = sizeClass.replace("ql-size-", "");
-                                const sizeMap = {
-                                    small: 16,
-                                    normal: 24,
-                                    large: 36,
-                                    huge: 48,
-                                };
-                                nodeStyle.size = sizeMap[size] || 24;
-                            }
-
-                            // Handle text color and background color
-                            const styleAttr = node.getAttribute("style") || "";
-                            const colorMatch = styleAttr.match(/(?<!background-)color:\s*([^;]+)/);
-                            if (colorMatch) {
-                                const rgbColor = colorMatch[1];
-                                if (rgbColor !== "rgb(255, 255, 255)") {
-                                    nodeStyle.color = rgbToHex(rgbColor);
-                                }
-                            }
-
-                            const bgMatch = styleAttr.match(/background-color:\s*([^;]+)/);
-                            if (bgMatch) {
-                                const rgbBgColor = bgMatch[1];
-                                if (rgbBgColor !== "rgb(255, 255, 255)") {
-                                    nodeStyle.shading = {
-                                        fill: rgbToHex(rgbBgColor),
-                                        color: rgbToHex(rgbBgColor),
-                                        val: "clear",
-                                    };
-                                }
-                            }
-
-                            // Handle text formatting - check both HTML tags and Quill classes
-                            const classes = node.className.split(" ");
-                            if (classes.includes("ql-bold") || styleAttr.includes("font-weight: bold") || node.tagName.toLowerCase() === "strong") {
-                                nodeStyle.bold = true;
-                            }
-                            if (classes.includes("ql-italic") || styleAttr.includes("font-style: italic") || node.tagName.toLowerCase() === "em") {
-                                nodeStyle.italics = true;
-                            }
-                            if (classes.includes("ql-underline") || styleAttr.includes("text-decoration: underline") || node.tagName.toLowerCase() === "u") {
-                                nodeStyle.underline = true;
-                            }
-                            if (classes.includes("ql-strike") || styleAttr.includes("text-decoration: line-through") || node.tagName.toLowerCase() === "s") {
-                                nodeStyle.strike = true;
-                            }
-
-                            // Process all child nodes with the accumulated style
-                            node.childNodes.forEach((child) => processNode(child, nodeStyle));
+                    // Handle text color and background color
+                    const styleAttr = node.getAttribute("style") || "";
+                    const colorMatch = styleAttr.match(/(?<!background-)color:\s*([^;]+)/);
+                    if (colorMatch) {
+                        const rgbColor = colorMatch[1];
+                        if (rgbColor !== "rgb(255, 255, 255)") {
+                            nodeStyle.color = rgbToHex(rgbColor);
                         }
-                    };
+                    }
 
-                    // Process all child nodes starting with the current style
-                    node.childNodes.forEach((child) => processNode(child, currentStyle));
+                    const bgMatch = styleAttr.match(/background-color:\s*([^;]+)/);
+                    if (bgMatch) {
+                        const rgbBgColor = bgMatch[1];
+                        if (rgbBgColor !== "rgb(255, 255, 255)") {
+                            nodeStyle.shading = {
+                                fill: rgbToHex(rgbBgColor),
+                                color: rgbToHex(rgbBgColor),
+                                val: "clear",
+                            };
+                        }
+                    }
 
-                    if (children.length > 0) {
+                    // Handle text formatting - check both HTML tags and Quill classes
+                    if (classes.includes("ql-bold") || styleAttr.includes("font-weight: bold") || node.tagName.toLowerCase() === "strong") {
+                        nodeStyle.bold = true;
+                    }
+                    if (classes.includes("ql-italic") || styleAttr.includes("font-style: italic") || node.tagName.toLowerCase() === "em") {
+                        nodeStyle.italics = true;
+                    }
+                    if (classes.includes("ql-underline") || styleAttr.includes("text-decoration: underline") || node.tagName.toLowerCase() === "u") {
+                        nodeStyle.underline = true;
+                    }
+                    if (classes.includes("ql-strike") || styleAttr.includes("text-decoration: line-through") || node.tagName.toLowerCase() === "s") {
+                        nodeStyle.strike = true;
+                    }
+
+                    // Handle indentation
+                    const indentClass = node.className.split(" ").find((cls) => cls.startsWith("ql-indent-"));
+                    if (indentClass) {
+                        const indentLevel = parseInt(indentClass.replace("ql-indent-", ""));
+                        indent = indentLevel;
+                    }
+
+                    // Handle lists
+                    if (node.tagName.toLowerCase() === "ol" || node.tagName.toLowerCase() === "ul") {
+                        currentListType = node.tagName.toLowerCase() === "ol" ? "ordered" : "unordered";
+                        currentListLevel = indent;
+                        // Process list items
+                        node.childNodes.forEach((child) => {
+                            if (child.tagName.toLowerCase() === "li") {
+                                const itemChildren = [];
+                                child.childNodes.forEach((grandChild) => {
+                                    const processed = processNode(grandChild, nodeStyle, indent);
+                                    itemChildren.push(...processed);
+                                });
+                                if (itemChildren.length > 0) {
+                                    paragraphs.push(
+                                        new Paragraph({
+                                            children: itemChildren,
+                                            indent: { left: indent * 720 }, // 720 twips per indent level
+                                            bullet:
+                                                currentListType === "unordered"
+                                                    ? {
+                                                          level: currentListLevel,
+                                                          format: "bullet",
+                                                      }
+                                                    : undefined,
+                                            numbering:
+                                                currentListType === "ordered"
+                                                    ? {
+                                                          reference: "default-numbering",
+                                                          level: currentListLevel,
+                                                      }
+                                                    : undefined,
+                                            spacing: {
+                                                after: 200,
+                                                line: 360,
+                                            },
+                                        })
+                                    );
+                                }
+                            }
+                        });
+                        return [];
+                    }
+
+                    // Handle blockquotes
+                    if (node.tagName.toLowerCase() === "blockquote") {
+                        nodeStyle.italics = true;
+                        nodeStyle.color = "666666";
+                        indent += 1;
+                    }
+
+                    // Handle code blocks
+                    if (node.tagName.toLowerCase() === "pre" && node.className.includes("ql-syntax")) {
+                        nodeStyle.font = "Consolas";
+                        nodeStyle.size = 20; // Slightly smaller font for code
+                        nodeStyle.color = "666666";
+                        nodeStyle.background = "F5F5F5";
+                    }
+
+                    // Handle superscript and subscript
+                    if (node.tagName.toLowerCase() === "sup") {
+                        nodeStyle.superScript = true;
+                    } else if (node.tagName.toLowerCase() === "sub") {
+                        nodeStyle.subScript = true;
+                    }
+
+                    // Process all child nodes with the accumulated style
+                    node.childNodes.forEach((child) => {
+                        const processed = processNode(child, nodeStyle, indent);
+                        children.push(...processed);
+                    });
+
+                    // Check if this is an inline element
+                    const isInline = node.tagName.toLowerCase().match(/^(span|strong|em|u|s|sup|sub)$/);
+
+                    // If this is a paragraph-level element and not a list item
+                    if (children.length > 0 && !node.tagName.toLowerCase().match(/^(ol|ul|li)$/) && !isInline) {
                         const paragraphStyle = {
                             children,
+                            indent: { left: indent * 720 },
                             spacing: {
                                 after: 200,
                                 line: 360,
@@ -310,10 +385,28 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
 
                         paragraphs.push(new Paragraph(paragraphStyle));
                     }
+
+                    // For inline elements, return their children to maintain text flow
+                    if (isInline) {
+                        return children;
+                    }
+
+                    // Don't return children for paragraph-level elements
+                    if (node.tagName.toLowerCase().match(/^(p|div|h[1-6]|blockquote|pre)$/)) {
+                        return [];
+                    }
+
+                    return children;
                 }
+                return [];
+            };
+
+            // Process all nodes
+            tempDiv.childNodes.forEach((node) => {
+                processNode(node, {}, 0);
             });
 
-            // Create the document
+            // Create the document with numbering styles
             const doc = new Document({
                 sections: [
                     {
@@ -321,6 +414,42 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                         children: paragraphs,
                     },
                 ],
+                styles: {
+                    default: {
+                        document: {
+                            run: {
+                                font: "Calibri",
+                                size: 24,
+                            },
+                            paragraph: {
+                                spacing: {
+                                    after: 200,
+                                    line: 360,
+                                },
+                            },
+                        },
+                    },
+                },
+                numbering: {
+                    config: [
+                        {
+                            reference: "default-numbering",
+                            levels: [
+                                {
+                                    level: 0,
+                                    format: "decimal",
+                                    text: "%1.",
+                                    alignment: "left",
+                                    style: {
+                                        paragraph: {
+                                            indent: { left: 720, hanging: 360 },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
             });
 
             // Generate the docx file
