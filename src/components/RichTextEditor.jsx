@@ -195,7 +195,13 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             }),
                         ];
                     }
-                    return [];
+                    // Preserve whitespace-only text nodes
+                    return [
+                        new TextRun({
+                            text: node.textContent,
+                            ...inheritedStyle,
+                        }),
+                    ];
                 } else if (node.nodeType === Node.ELEMENT_NODE) {
                     const children = [];
                     const nodeStyle = { ...inheritedStyle };
