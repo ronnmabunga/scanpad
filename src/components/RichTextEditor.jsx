@@ -172,6 +172,14 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
         setShowUnsavedConfirm(false);
     };
 
+    const handleExportDocx = () => {
+        // Implementation of handleExportDocx function
+    };
+
+    const handleExportPdf = () => {
+        // Implementation of handleExportPdf function
+    };
+
     return (
         <div className={`flex-grow-1 d-flex ${className}`} style={{ ...style }} {...props}>
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
@@ -190,6 +198,9 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                 </NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => setShowSaveAsModal(true)}>Save As</NavDropdown.Item>
                                 <NavDropdown.Item onClick={() => setShowLoadModal(true)}>Load</NavDropdown.Item>
+                                <NavDropdown.Divider />
+                                <NavDropdown.Item onClick={handleExportDocx}>Export as DOCX</NavDropdown.Item>
+                                <NavDropdown.Item onClick={handleExportPdf}>Export as PDF</NavDropdown.Item>
                             </NavDropdown>
                         </Nav>
                         <div className="d-flex align-items-center position-absolute start-50 translate-middle-x">
