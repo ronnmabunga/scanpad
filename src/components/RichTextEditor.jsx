@@ -242,6 +242,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             return [
                                 new ImageRun({
                                     data: blob,
+                                    type: "png",
                                     transformation: {
                                         width: 400, // Default width in points
                                         height: 300, // Default height in points
@@ -575,7 +576,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                     })),
                 },
                 features: {
-                    updateFields: true,
+                    updateFields: false,
                     trackRevisions: false,
                     comments: false,
                     footnotes: false,
