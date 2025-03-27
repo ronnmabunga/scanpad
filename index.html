@@ -1,13 +1,51 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- Basic Meta Tags -->
+        <title>OCR-Assisted Notepad - Home</title>
+        <meta name="description" content="An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time. Simply paste an image to get started!" />
+        <meta name="keywords" content="OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, OCR-assisted notepad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted" />
+        <meta name="author" content="R.Mabunga" />
+        <meta name="robots" content="index,follow" />
+        <meta name="language" content="English" />
+        <meta name="theme-color" content="#000000" />
+
+        <!-- Open Graph Meta Tags -->
+        <meta property="og:title" content="OCR Rich Text Editor - Convert Images to Text" />
+        <meta property="og:description" content="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription." />
+        <meta property="og:image" content="/icon.svg" />
+        <meta property="og:type" content="website" />
+
+        <!-- Twitter Card Meta Tags -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="OCR-Assisted Notepad - Convert Images to Text" />
+        <meta name="twitter:description" content="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription." />
+        <meta name="twitter:image" content="/icon.svg" />
+
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "OCR-Assisted Notepad",
+                "description": "An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time.",
+                "applicationCategory": "Text Editor",
+                "operatingSystem": "Web Browser",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/main.jsx"></script>
+    </body>
 </html>
