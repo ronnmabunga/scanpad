@@ -21,13 +21,15 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
     const { saveDocument, currentDoc, setCurrentDoc } = useDatabase();
     const quillRef = useRef(null);
     const [content, setContent] = useState(() => {
-        // If there's a current document, use its content
-        if (currentDoc?.content) {
-            return currentDoc.content;
+        // If there's a current document, try to load its specific localStorage content
+        if (currentDoc?.id) {
+            const savedContent = localStorage.getItem(`editorContent_${currentDoc.id}`);
+            if (savedContent) {
+                return savedContent;
+            }
         }
-        // Otherwise, try to load from localStorage
-        const savedContent = localStorage.getItem("editorContent");
-        return savedContent || "";
+        // If no document-specific content, fall back to current document
+        return currentDoc?.content || "";
     });
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [showSaveAsModal, setShowSaveAsModal] = useState(false);
@@ -46,17 +48,23 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
 
     useEffect(() => {
         if (currentDoc) {
-            setContent(currentDoc.content);
+            // Check document-specific localStorage first
+            const savedContent = localStorage.getItem(`editorContent_${currentDoc.id}`);
+            if (savedContent) {
+                setContent(savedContent);
+            } else {
+                setContent(currentDoc.content);
+            }
             setLastSavedContent(currentDoc.content);
         }
     }, [currentDoc]);
 
     // Save content to localStorage whenever it changes
     useEffect(() => {
-        if (!currentDoc) {
-            localStorage.setItem("editorContent", content);
+        if (currentDoc?.id) {
+            localStorage.setItem(`editorContent_${currentDoc.id}`, content);
         }
-    }, [content, currentDoc]);
+    }, [content, currentDoc?.id]);
 
     // Add effect to ensure Quill editor is initialized
     useEffect(() => {
