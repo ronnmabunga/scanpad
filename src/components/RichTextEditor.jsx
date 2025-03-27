@@ -182,7 +182,6 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
 
             // Get all text content, preserving formatting
             const paragraphs = [];
-            let currentListLevel = 0;
             let currentListType = null; // 'ordered' or 'unordered'
 
             const processNode = (node, inheritedStyle = {}, inheritedIndent = 0) => {
@@ -284,38 +283,42 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                     // Handle lists
                     if (node.tagName.toLowerCase() === "ol" || node.tagName.toLowerCase() === "ul") {
                         currentListType = node.tagName.toLowerCase() === "ol" ? "ordered" : "unordered";
-                        currentListLevel = indent;
                         // Process list items
                         node.childNodes.forEach((child) => {
                             if (child.tagName.toLowerCase() === "li") {
                                 const itemChildren = [];
+                                // Get indentation level from the list item and add 1 for default list indentation
+                                const liIndentClass = child.className.split(" ").find((cls) => cls.startsWith("ql-indent-"));
+                                const liIndent = (liIndentClass ? parseInt(liIndentClass.replace("ql-indent-", "")) : 0) + 1;
+
                                 child.childNodes.forEach((grandChild) => {
-                                    const processed = processNode(grandChild, nodeStyle, indent);
+                                    const processed = processNode(grandChild, nodeStyle, liIndent);
                                     itemChildren.push(...processed);
                                 });
                                 if (itemChildren.length > 0) {
                                     paragraphs.push(
                                         new Paragraph({
                                             children: itemChildren,
-                                            indent: { left: indent * 720 }, // 720 twips per indent level
+                                            indent: { left: liIndent * 720 }, // 720 twips per indent level
                                             bullet:
                                                 currentListType === "unordered"
                                                     ? {
-                                                          level: currentListLevel,
+                                                          level: liIndent - 1, // Subtract 1 since bullet levels start at 0
                                                           format: "bullet",
                                                       }
                                                     : undefined,
                                             numbering:
                                                 currentListType === "ordered"
                                                     ? {
-                                                          reference: "default-numbering",
-                                                          level: currentListLevel,
+                                                          reference: "ordered-list",
+                                                          level: liIndent - 1, // Subtract 1 since numbering levels start at 0
                                                       }
                                                     : undefined,
                                             spacing: {
                                                 after: 200,
                                                 line: 360,
                                             },
+                                            style: "ListParagraph",
                                         })
                                     );
                                 }
@@ -435,11 +438,29 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                         },
                     },
+                    paragraphStyles: [
+                        {
+                            id: "ListParagraph",
+                            name: "List Paragraph",
+                            basedOn: "Normal",
+                            next: "Normal",
+                            quickFormat: true,
+                            run: {
+                                size: 24,
+                            },
+                            paragraph: {
+                                spacing: {
+                                    after: 200,
+                                    line: 360,
+                                },
+                            },
+                        },
+                    ],
                 },
                 numbering: {
                     config: [
                         {
-                            reference: "default-numbering",
+                            reference: "ordered-list",
                             levels: [
                                 {
                                     level: 0,
@@ -449,6 +470,28 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                     style: {
                                         paragraph: {
                                             indent: { left: 720, hanging: 360 },
+                                        },
+                                    },
+                                },
+                                {
+                                    level: 1,
+                                    format: "decimal",
+                                    text: "%1.%2.",
+                                    alignment: "left",
+                                    style: {
+                                        paragraph: {
+                                            indent: { left: 1440, hanging: 360 },
+                                        },
+                                    },
+                                },
+                                {
+                                    level: 2,
+                                    format: "decimal",
+                                    text: "%1.%2.%3.",
+                                    alignment: "left",
+                                    style: {
+                                        paragraph: {
+                                            indent: { left: 2160, hanging: 360 },
                                         },
                                     },
                                 },
