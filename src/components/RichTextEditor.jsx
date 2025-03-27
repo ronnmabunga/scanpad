@@ -9,7 +9,7 @@ import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
 import { setQuillEditor } from "../utils/editorRef";
 import { FaClipboardCheck } from "react-icons/fa";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ExternalHyperlink, ImageRun } from "docx";
 import { saveAs } from "file-saver";
 
 // Register Quill modules
@@ -79,7 +79,26 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
 
     const modules = {
         toolbar: {
-            container: [[{ header: [1, 2, 3, 4, 5, 6, false] }], [{ size: ["small", false, "large", "huge"] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ font: [] }], [{ align: [] }], [{ list: "ordered" }, { list: "bullet" }], [{ indent: "-1" }, { indent: "+1" }], ["blockquote", "code-block"], [{ script: "sub" }, { script: "super" }], ["link", "image", "video", "formula"], ["clean"], ["undo", "redo"]],
+            container: [
+                [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                [{ size: ["small", false, "large", "huge"] }],
+                ["bold", "italic", "underline", "strike"],
+                [{ color: [] }, { background: [] }],
+                [{ font: [] }],
+                [{ align: [] }],
+                [{ list: "ordered" }, { list: "bullet" }],
+                [{ indent: "-1" }, { indent: "+1" }],
+                ["blockquote", "code-block"],
+                [{ script: "sub" }, { script: "super" }],
+                [
+                    "link",
+                    "image",
+                    // "video",
+                    // "formula",
+                ],
+                ["clean"],
+                ["undo", "redo"],
+            ],
         },
     };
 
@@ -206,6 +225,51 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                     const children = [];
                     const nodeStyle = { ...inheritedStyle };
                     let indent = inheritedIndent;
+
+                    // Handle images
+                    if (node.tagName.toLowerCase() === "img") {
+                        const src = node.getAttribute("src");
+                        if (src) {
+                            // Convert base64 to blob
+                            const base64Data = src.split(",")[1];
+                            const binaryData = atob(base64Data);
+                            const bytes = new Uint8Array(binaryData.length);
+                            for (let i = 0; i < binaryData.length; i++) {
+                                bytes[i] = binaryData.charCodeAt(i);
+                            }
+                            const blob = new Blob([bytes], { type: "image/png" });
+
+                            return [
+                                new ImageRun({
+                                    data: blob,
+                                    transformation: {
+                                        width: 400, // Default width in points
+                                        height: 300, // Default height in points
+                                    },
+                                }),
+                            ];
+                        }
+                    }
+
+                    // Handle links
+                    if (node.tagName.toLowerCase() === "a") {
+                        const href = node.getAttribute("href");
+                        if (href) {
+                            const linkChildren = [];
+                            node.childNodes.forEach((child) => {
+                                const processed = processNode(child, { ...nodeStyle, color: "0000FF", underline: true }, indent);
+                                linkChildren.push(...processed);
+                            });
+                            if (linkChildren.length > 0) {
+                                return [
+                                    new ExternalHyperlink({
+                                        children: linkChildren,
+                                        link: href,
+                                    }),
+                                ];
+                            }
+                        }
+                    }
 
                     // Get classes for the node
                     const classes = node.className.split(" ");
@@ -420,7 +484,19 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
             const doc = new Document({
                 sections: [
                     {
-                        properties: {},
+                        properties: {
+                            page: {
+                                margin: {
+                                    top: 1440, // 1 inch
+                                    right: 1440,
+                                    bottom: 1440,
+                                    left: 1440,
+                                    header: 720, // 0.5 inch
+                                    footer: 720,
+                                    gutter: 0,
+                                },
+                            },
+                        },
                         children: paragraphs,
                     },
                 ],
@@ -433,8 +509,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                             paragraph: {
                                 spacing: {
-                                    after: 100, // Reduced from 200
-                                    line: 240, // Reduced from 360
+                                    after: 100,
+                                    line: 240,
                                 },
                             },
                         },
@@ -451,8 +527,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                             paragraph: {
                                 spacing: {
-                                    after: 100, // Reduced from 200
-                                    line: 240, // Reduced from 360
+                                    after: 100,
+                                    line: 240,
                                 },
                             },
                         },
@@ -497,6 +573,14 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                         ],
                     })),
+                },
+                features: {
+                    updateFields: true,
+                    trackRevisions: false,
+                    comments: false,
+                    footnotes: false,
+                    endnotes: false,
+                    pageNumbers: false,
                 },
             });
 
