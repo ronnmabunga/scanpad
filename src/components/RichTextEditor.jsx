@@ -9,6 +9,8 @@ import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
 import { setQuillEditor } from "../utils/editorRef";
 import { FaClipboardCheck } from "react-icons/fa";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 
 // Register Quill modules
 const Quill = ReactQuill.Quill;
@@ -172,8 +174,286 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
         setShowUnsavedConfirm(false);
     };
 
-    const handleExportDocx = () => {
-        // Implementation of handleExportDocx function
+    const handleExportDocx = async () => {
+        try {
+            // Create a temporary div to parse HTML content
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = content;
+
+            // Get all text content, preserving formatting
+            const paragraphs = [];
+            tempDiv.childNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Check for heading level
+                    let headingLevel;
+                    const tagName = node.tagName.toLowerCase();
+                    const tagMatch = tagName.match(/^h(\d)$/i);
+                    if (tagMatch) {
+                        headingLevel = parseInt(tagMatch[1]);
+                    } else {
+                        // Check Quill's header classes
+                        const classes = node.className.split(" ");
+                        const headerClass = classes.find((cls) => cls.startsWith("ql-header-"));
+                        if (headerClass) {
+                            const level = headerClass.replace("ql-header-", "");
+                            headingLevel = parseInt(level);
+                        }
+                    }
+
+                    const children = [];
+                    let currentText = "";
+                    let currentStyle = {};
+
+                    // Get parent node formatting
+                    const parentClasses = node.className.split(" ");
+                    const parentStyleAttr = node.getAttribute("style") || "";
+
+                    // Handle parent font size
+                    const parentSizeClass = parentClasses.find((cls) => cls.startsWith("ql-size-"));
+                    if (parentSizeClass) {
+                        const size = parentSizeClass.replace("ql-size-", "");
+                        const sizeMap = {
+                            small: 16,
+                            normal: 24,
+                            large: 36,
+                            huge: 48,
+                        };
+                        currentStyle.size = sizeMap[size] || 24;
+                    }
+
+                    // Handle parent text color and background color
+                    const parentColorMatch = parentStyleAttr.match(/(?<!background-)color:\s*([^;]+)/);
+                    if (parentColorMatch) {
+                        const rgbColor = parentColorMatch[1];
+                        if (rgbColor !== "rgb(255, 255, 255)") {
+                            currentStyle.color = rgbToHex(rgbColor);
+                        }
+                    }
+
+                    const parentBgMatch = parentStyleAttr.match(/background-color:\s*([^;]+)/);
+                    if (parentBgMatch) {
+                        const rgbBgColor = parentBgMatch[1];
+                        if (rgbBgColor !== "rgb(255, 255, 255)") {
+                            currentStyle.shading = {
+                                fill: rgbToHex(rgbBgColor),
+                                color: rgbToHex(rgbBgColor),
+                                val: "clear",
+                            };
+                        }
+                    }
+
+                    // Handle parent text formatting
+                    if (parentClasses.includes("ql-bold")) currentStyle.bold = true;
+                    if (parentClasses.includes("ql-italic")) currentStyle.italics = true;
+                    if (parentClasses.includes("ql-underline")) currentStyle.underline = true;
+                    if (parentClasses.includes("ql-strike")) currentStyle.strike = true;
+
+                    // Handle parent alignment
+                    let alignment;
+                    const parentAlignClass = parentClasses.find((cls) => cls.startsWith("ql-align-"));
+                    if (parentAlignClass) {
+                        const align = parentAlignClass.replace("ql-align-", "");
+                        switch (align) {
+                            case "center":
+                                alignment = AlignmentType.CENTER;
+                                break;
+                            case "right":
+                                alignment = AlignmentType.RIGHT;
+                                break;
+                            case "justify":
+                                alignment = AlignmentType.JUSTIFIED;
+                                break;
+                            default:
+                                alignment = AlignmentType.LEFT;
+                        }
+                    }
+
+                    // Process each child node
+                    node.childNodes.forEach((child) => {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            currentText += child.textContent;
+                        } else if (child.nodeType === Node.ELEMENT_NODE) {
+                            // If we have accumulated text, add it with current style
+                            if (currentText) {
+                                children.push(
+                                    new TextRun({
+                                        text: currentText,
+                                        ...currentStyle,
+                                    })
+                                );
+                                currentText = "";
+                            }
+
+                            // Get style from the element's classes and attributes
+                            const classes = child.className.split(" ");
+                            const styleAttr = child.getAttribute("style") || "";
+
+                            // Create a new style object for this child
+                            const childStyle = { ...currentStyle };
+
+                            // Handle font size
+                            const sizeClass = classes.find((cls) => cls.startsWith("ql-size-"));
+                            if (sizeClass) {
+                                const size = sizeClass.replace("ql-size-", "");
+                                const sizeMap = {
+                                    small: 16,
+                                    normal: 24,
+                                    large: 36,
+                                    huge: 48,
+                                };
+                                childStyle.size = sizeMap[size] || 24;
+                            }
+
+                            // Handle text color and background color
+                            const colorMatch = styleAttr.match(/(?<!background-)color:\s*([^;]+)/);
+                            if (colorMatch) {
+                                const rgbColor = colorMatch[1];
+                                if (rgbColor !== "rgb(255, 255, 255)") {
+                                    childStyle.color = rgbToHex(rgbColor);
+                                }
+                            }
+
+                            const bgMatch = styleAttr.match(/background-color:\s*([^;]+)/);
+                            if (bgMatch) {
+                                const rgbBgColor = bgMatch[1];
+                                if (rgbBgColor !== "rgb(255, 255, 255)") {
+                                    childStyle.shading = {
+                                        fill: rgbToHex(rgbBgColor),
+                                        color: rgbToHex(rgbBgColor),
+                                        val: "clear",
+                                    };
+                                }
+                            }
+
+                            // Handle text formatting
+                            if (classes.includes("ql-bold")) childStyle.bold = true;
+                            if (classes.includes("ql-italic")) childStyle.italics = true;
+                            if (classes.includes("ql-underline")) childStyle.underline = true;
+                            if (classes.includes("ql-strike")) childStyle.strike = true;
+
+                            // Handle alignment
+                            const alignClass = classes.find((cls) => cls.startsWith("ql-align-"));
+                            if (alignClass) {
+                                const align = alignClass.replace("ql-align-", "");
+                                switch (align) {
+                                    case "center":
+                                        alignment = AlignmentType.CENTER;
+                                        break;
+                                    case "right":
+                                        alignment = AlignmentType.RIGHT;
+                                        break;
+                                    case "justify":
+                                        alignment = AlignmentType.JUSTIFIED;
+                                        break;
+                                    default:
+                                        alignment = AlignmentType.LEFT;
+                                }
+                            }
+
+                            // Handle lists and indentation
+                            if (classes.includes("ql-indent-1")) childStyle.indent = { left: 720 };
+                            if (classes.includes("ql-indent-2")) childStyle.indent = { left: 1440 };
+                            if (classes.includes("ql-indent-3")) childStyle.indent = { left: 2160 };
+                            if (classes.includes("ql-indent-4")) childStyle.indent = { left: 2880 };
+                            if (classes.includes("ql-indent-5")) childStyle.indent = { left: 3600 };
+                            if (classes.includes("ql-indent-6")) childStyle.indent = { left: 4320 };
+                            if (classes.includes("ql-indent-7")) childStyle.indent = { left: 5040 };
+                            if (classes.includes("ql-indent-8")) childStyle.indent = { left: 5760 };
+
+                            // Handle blockquote
+                            if (classes.includes("ql-blockquote")) {
+                                childStyle.indent = { left: 720 };
+                                childStyle.style = "Quote";
+                            }
+
+                            // Handle code block
+                            if (classes.includes("ql-code-block")) {
+                                childStyle.style = "No Spacing";
+                                childStyle.font = { name: "Courier New" };
+                            }
+
+                            // Handle sub/superscript
+                            if (classes.includes("ql-script-sub")) childStyle.subScript = true;
+                            if (classes.includes("ql-script-super")) childStyle.superScript = true;
+
+                            // Add the element's text with its style
+                            if (child.textContent.trim()) {
+                                children.push(
+                                    new TextRun({
+                                        text: child.textContent,
+                                        ...childStyle,
+                                    })
+                                );
+                            }
+                        }
+                    });
+
+                    // Add any remaining text
+                    if (currentText) {
+                        children.push(
+                            new TextRun({
+                                text: currentText,
+                                ...currentStyle,
+                            })
+                        );
+                    }
+
+                    if (children.length > 0) {
+                        const paragraphStyle = {
+                            children,
+                            spacing: {
+                                after: 200,
+                                line: 360,
+                            },
+                            alignment,
+                        };
+
+                        if (headingLevel) {
+                            paragraphStyle.heading = HeadingLevel[`HEADING_${headingLevel}`];
+                        }
+
+                        paragraphs.push(new Paragraph(paragraphStyle));
+                    }
+                }
+            });
+
+            // Create the document
+            const doc = new Document({
+                sections: [
+                    {
+                        properties: {},
+                        children: paragraphs,
+                    },
+                ],
+            });
+
+            // Generate the docx file
+            const blob = await Packer.toBlob(doc);
+
+            // Save the file
+            const fileName = currentDoc?.name || "Untitled Document";
+            saveAs(blob, `${fileName}.docx`);
+        } catch (error) {
+            console.error("Error exporting to DOCX:", error);
+            alert("Error exporting to DOCX. Please try again.");
+        }
+    };
+
+    // Add RGB to Hex conversion function
+    const rgbToHex = (rgb) => {
+        // Handle rgb(r, g, b) format
+        const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (match) {
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+        // If it's already hex, return it
+        if (rgb.startsWith("#")) {
+            return rgb.toUpperCase();
+        }
+        return undefined;
     };
 
     const handleExportPdf = () => {
