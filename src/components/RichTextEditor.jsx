@@ -317,8 +317,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                                       }
                                                     : undefined,
                                             spacing: {
-                                                after: 200,
-                                                line: 360,
+                                                after: 100, // Reduced from 200
+                                                line: 240, // Reduced from 360
                                             },
                                         })
                                     );
@@ -365,8 +365,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             children,
                             indent: { left: indent * 720 },
                             spacing: {
-                                after: 200,
-                                line: 360,
+                                after: 100, // Reduced from 200
+                                line: 240, // Reduced from 360
                             },
                         };
 
@@ -433,8 +433,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                             paragraph: {
                                 spacing: {
-                                    after: 200,
-                                    line: 360,
+                                    after: 100, // Reduced from 200
+                                    line: 240, // Reduced from 360
                                 },
                             },
                         },
@@ -451,8 +451,8 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             },
                             paragraph: {
                                 spacing: {
-                                    after: 200,
-                                    line: 360,
+                                    after: 100, // Reduced from 200
+                                    line: 240, // Reduced from 360
                                 },
                             },
                         },
