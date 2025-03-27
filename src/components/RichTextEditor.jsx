@@ -2,12 +2,13 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useNavigate } from "react-router-dom";
-import { Navbar, Nav, NavDropdown, Modal, Button } from "react-bootstrap";
+import { Navbar, Nav, NavDropdown, Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { useState, useEffect, useRef } from "react";
 import LoadFileIntoEditorModal from "./LoadFileIntoEditorModal";
 import SaveFileAsIntoEditorModal from "./SaveFileAsIntoEditorModal";
 import { useDatabase } from "../contexts/DatabaseContext";
 import { setQuillEditor } from "../utils/editorRef";
+import { FaClipboardCheck } from "react-icons/fa";
 
 // Register Quill modules
 const Quill = ReactQuill.Quill;
@@ -175,19 +176,21 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                         </div>
                         <div className="d-flex align-items-center ms-auto">
                             <div className="form-check form-switch me-3">
-                                <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    id="autoPasteOCR"
-                                    checked={autoPasteOCR}
-                                    onChange={(e) => {
-                                        console.log("RichTextEditor - Checkbox changed:", e.target.checked);
-                                        onAutoPasteOCRChange?.(e.target.checked);
-                                    }}
-                                />
-                                <label className="form-check-label text-white" htmlFor="autoPasteOCR">
-                                    Auto-paste OCR
-                                </label>
+                                <OverlayTrigger placement="bottom" overlay={<Tooltip id="auto-paste-tooltip">Auto-paste OCR text at cursor position</Tooltip>}>
+                                    <div className="d-flex align-items-center">
+                                        <input
+                                            className="form-check-input"
+                                            type="checkbox"
+                                            id="autoPasteOCR"
+                                            checked={autoPasteOCR}
+                                            onChange={(e) => {
+                                                console.log("RichTextEditor - Checkbox changed:", e.target.checked);
+                                                onAutoPasteOCRChange?.(e.target.checked);
+                                            }}
+                                        />
+                                        <FaClipboardCheck className={`ms-2 ${autoPasteOCR ? "text-primary" : "text-secondary"}`} style={{ fontSize: "1.2rem" }} />
+                                    </div>
+                                </OverlayTrigger>
                             </div>
                             <span className="text-white">{normalizeContent(content) !== normalizeContent(lastSavedContent) ? <i className="bi bi-save text-danger"></i> : <i className="bi bi-check-circle text-success"></i>}</span>
                         </div>

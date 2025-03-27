@@ -3,10 +3,14 @@ import OCRImageCapture from "./OCRImageCapture";
 import RichTextEditor from "./RichTextEditor";
 
 function OCRNotepad({ className, style, showHomeLink = false, ...props }) {
-    const [autoPasteOCR, setAutoPasteOCR] = useState(false);
+    const [autoPasteOCR, setAutoPasteOCR] = useState(() => {
+        const saved = localStorage.getItem("autoPasteOCR");
+        return saved ? JSON.parse(saved) : false;
+    });
 
     useEffect(() => {
         console.log("OCRNotepad - autoPasteOCR changed:", autoPasteOCR);
+        localStorage.setItem("autoPasteOCR", JSON.stringify(autoPasteOCR));
     }, [autoPasteOCR]);
 
     const handleAutoPasteOCRChange = (value) => {
