@@ -201,98 +201,25 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                     }
 
                     const children = [];
-                    let currentText = "";
                     let currentStyle = {};
 
-                    // Get parent node formatting
-                    const parentClasses = node.className.split(" ");
-                    const parentStyleAttr = node.getAttribute("style") || "";
-
-                    // Handle parent font size
-                    const parentSizeClass = parentClasses.find((cls) => cls.startsWith("ql-size-"));
-                    if (parentSizeClass) {
-                        const size = parentSizeClass.replace("ql-size-", "");
-                        const sizeMap = {
-                            small: 16,
-                            normal: 24,
-                            large: 36,
-                            huge: 48,
-                        };
-                        currentStyle.size = sizeMap[size] || 24;
-                    }
-
-                    // Handle parent text color and background color
-                    const parentColorMatch = parentStyleAttr.match(/(?<!background-)color:\s*([^;]+)/);
-                    if (parentColorMatch) {
-                        const rgbColor = parentColorMatch[1];
-                        if (rgbColor !== "rgb(255, 255, 255)") {
-                            currentStyle.color = rgbToHex(rgbColor);
-                        }
-                    }
-
-                    const parentBgMatch = parentStyleAttr.match(/background-color:\s*([^;]+)/);
-                    if (parentBgMatch) {
-                        const rgbBgColor = parentBgMatch[1];
-                        if (rgbBgColor !== "rgb(255, 255, 255)") {
-                            currentStyle.shading = {
-                                fill: rgbToHex(rgbBgColor),
-                                color: rgbToHex(rgbBgColor),
-                                val: "clear",
-                            };
-                        }
-                    }
-
-                    // Handle parent text formatting
-                    if (parentClasses.includes("ql-bold")) currentStyle.bold = true;
-                    if (parentClasses.includes("ql-italic")) currentStyle.italics = true;
-                    if (parentClasses.includes("ql-underline")) currentStyle.underline = true;
-                    if (parentClasses.includes("ql-strike")) currentStyle.strike = true;
-
-                    // Handle parent alignment
-                    let alignment;
-                    const parentAlignClass = parentClasses.find((cls) => cls.startsWith("ql-align-"));
-                    if (parentAlignClass) {
-                        const align = parentAlignClass.replace("ql-align-", "");
-                        switch (align) {
-                            case "center":
-                                alignment = AlignmentType.CENTER;
-                                break;
-                            case "right":
-                                alignment = AlignmentType.RIGHT;
-                                break;
-                            case "justify":
-                                alignment = AlignmentType.JUSTIFIED;
-                                break;
-                            default:
-                                alignment = AlignmentType.LEFT;
-                        }
-                    }
-
                     // Process each child node
-                    node.childNodes.forEach((child) => {
-                        if (child.nodeType === Node.TEXT_NODE) {
-                            currentText += child.textContent;
-                        } else if (child.nodeType === Node.ELEMENT_NODE) {
-                            // If we have accumulated text, add it with current style
-                            if (currentText) {
+                    const processNode = (node, inheritedStyle = {}) => {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            if (node.textContent.trim()) {
                                 children.push(
                                     new TextRun({
-                                        text: currentText,
-                                        ...currentStyle,
+                                        text: node.textContent,
+                                        ...inheritedStyle,
                                     })
                                 );
-                                currentText = "";
                             }
-
-                            // Get style from the element's classes and attributes
-                            const classes = child.className.split(" ");
-                            const styleAttr = child.getAttribute("style") || "";
-
-                            // Create a new style object for this child
-                            const childStyle = { ...currentStyle };
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            // Create a new style object that inherits from parent
+                            const nodeStyle = { ...inheritedStyle };
 
                             // Handle font size
-                            const sizeClass = classes.find((cls) => cls.startsWith("ql-size-"));
+                            const sizeClass = node.className.split(" ").find((cls) => cls.startsWith("ql-size-"));
                             if (sizeClass) {
                                 const size = sizeClass.replace("ql-size-", "");
                                 const sizeMap = {
@@ -301,15 +228,16 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                     large: 36,
                                     huge: 48,
                                 };
-                                childStyle.size = sizeMap[size] || 24;
+                                nodeStyle.size = sizeMap[size] || 24;
                             }
 
                             // Handle text color and background color
+                            const styleAttr = node.getAttribute("style") || "";
                             const colorMatch = styleAttr.match(/(?<!background-)color:\s*([^;]+)/);
                             if (colorMatch) {
                                 const rgbColor = colorMatch[1];
                                 if (rgbColor !== "rgb(255, 255, 255)") {
-                                    childStyle.color = rgbToHex(rgbColor);
+                                    nodeStyle.color = rgbToHex(rgbColor);
                                 }
                             }
 
@@ -317,7 +245,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             if (bgMatch) {
                                 const rgbBgColor = bgMatch[1];
                                 if (rgbBgColor !== "rgb(255, 255, 255)") {
-                                    childStyle.shading = {
+                                    nodeStyle.shading = {
                                         fill: rgbToHex(rgbBgColor),
                                         color: rgbToHex(rgbBgColor),
                                         val: "clear",
@@ -325,78 +253,28 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                 }
                             }
 
-                            // Handle text formatting
-                            if (classes.includes("ql-bold")) childStyle.bold = true;
-                            if (classes.includes("ql-italic")) childStyle.italics = true;
-                            if (classes.includes("ql-underline")) childStyle.underline = true;
-                            if (classes.includes("ql-strike")) childStyle.strike = true;
-
-                            // Handle alignment
-                            const alignClass = classes.find((cls) => cls.startsWith("ql-align-"));
-                            if (alignClass) {
-                                const align = alignClass.replace("ql-align-", "");
-                                switch (align) {
-                                    case "center":
-                                        alignment = AlignmentType.CENTER;
-                                        break;
-                                    case "right":
-                                        alignment = AlignmentType.RIGHT;
-                                        break;
-                                    case "justify":
-                                        alignment = AlignmentType.JUSTIFIED;
-                                        break;
-                                    default:
-                                        alignment = AlignmentType.LEFT;
-                                }
+                            // Handle text formatting - check both HTML tags and Quill classes
+                            const classes = node.className.split(" ");
+                            if (classes.includes("ql-bold") || styleAttr.includes("font-weight: bold") || node.tagName.toLowerCase() === "strong") {
+                                nodeStyle.bold = true;
+                            }
+                            if (classes.includes("ql-italic") || styleAttr.includes("font-style: italic") || node.tagName.toLowerCase() === "em") {
+                                nodeStyle.italics = true;
+                            }
+                            if (classes.includes("ql-underline") || styleAttr.includes("text-decoration: underline") || node.tagName.toLowerCase() === "u") {
+                                nodeStyle.underline = true;
+                            }
+                            if (classes.includes("ql-strike") || styleAttr.includes("text-decoration: line-through") || node.tagName.toLowerCase() === "s") {
+                                nodeStyle.strike = true;
                             }
 
-                            // Handle lists and indentation
-                            if (classes.includes("ql-indent-1")) childStyle.indent = { left: 720 };
-                            if (classes.includes("ql-indent-2")) childStyle.indent = { left: 1440 };
-                            if (classes.includes("ql-indent-3")) childStyle.indent = { left: 2160 };
-                            if (classes.includes("ql-indent-4")) childStyle.indent = { left: 2880 };
-                            if (classes.includes("ql-indent-5")) childStyle.indent = { left: 3600 };
-                            if (classes.includes("ql-indent-6")) childStyle.indent = { left: 4320 };
-                            if (classes.includes("ql-indent-7")) childStyle.indent = { left: 5040 };
-                            if (classes.includes("ql-indent-8")) childStyle.indent = { left: 5760 };
-
-                            // Handle blockquote
-                            if (classes.includes("ql-blockquote")) {
-                                childStyle.indent = { left: 720 };
-                                childStyle.style = "Quote";
-                            }
-
-                            // Handle code block
-                            if (classes.includes("ql-code-block")) {
-                                childStyle.style = "No Spacing";
-                                childStyle.font = { name: "Courier New" };
-                            }
-
-                            // Handle sub/superscript
-                            if (classes.includes("ql-script-sub")) childStyle.subScript = true;
-                            if (classes.includes("ql-script-super")) childStyle.superScript = true;
-
-                            // Add the element's text with its style
-                            if (child.textContent.trim()) {
-                                children.push(
-                                    new TextRun({
-                                        text: child.textContent,
-                                        ...childStyle,
-                                    })
-                                );
-                            }
+                            // Process all child nodes with the accumulated style
+                            node.childNodes.forEach((child) => processNode(child, nodeStyle));
                         }
-                    });
+                    };
 
-                    // Add any remaining text
-                    if (currentText) {
-                        children.push(
-                            new TextRun({
-                                text: currentText,
-                                ...currentStyle,
-                            })
-                        );
-                    }
+                    // Process all child nodes starting with the current style
+                    node.childNodes.forEach((child) => processNode(child, currentStyle));
 
                     if (children.length > 0) {
                         const paragraphStyle = {
@@ -405,11 +283,29 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                                 after: 200,
                                 line: 360,
                             },
-                            alignment,
                         };
 
                         if (headingLevel) {
                             paragraphStyle.heading = HeadingLevel[`HEADING_${headingLevel}`];
+                        }
+
+                        // Handle alignment at paragraph level
+                        const alignClass = node.className.split(" ").find((cls) => cls.startsWith("ql-align-"));
+                        if (alignClass) {
+                            const align = alignClass.replace("ql-align-", "");
+                            switch (align) {
+                                case "center":
+                                    paragraphStyle.alignment = AlignmentType.CENTER;
+                                    break;
+                                case "right":
+                                    paragraphStyle.alignment = AlignmentType.RIGHT;
+                                    break;
+                                case "justify":
+                                    paragraphStyle.alignment = AlignmentType.JUSTIFIED;
+                                    break;
+                                default:
+                                    paragraphStyle.alignment = AlignmentType.LEFT;
+                            }
                         }
 
                         paragraphs.push(new Paragraph(paragraphStyle));
