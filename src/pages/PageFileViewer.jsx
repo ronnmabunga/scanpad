@@ -5,6 +5,7 @@ import PageFileNotFound from "./PageFileNotFound";
 import { useDatabase } from "../contexts/DatabaseContext";
 import Fuse from "fuse.js";
 import { Button, Form, ListGroup, Modal } from "react-bootstrap";
+import MetaTags from "../components/MetaTags";
 
 // Ad component for better organization
 const AdUnit = ({ className, style, id }) => (
@@ -18,7 +19,7 @@ const AdUnit = ({ className, style, id }) => (
 function PageFileViewer() {
     const { fileId } = useParams();
     const navigate = useNavigate();
-    const { documents, setCurrentDoc, deleteDocument } = useDatabase();
+    const { documents, currentDoc, setCurrentDoc, deleteDocument } = useDatabase();
     const [isNotFound, setIsNotFound] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -99,102 +100,103 @@ function PageFileViewer() {
     }
 
     return (
-        <div className="container-fluid bg-dark text-white p-0" style={{ height: "100vh" }}>
-            <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
-                {/* Top Ad (Mobile Only) */}
-                {showAds && (
-                    <div className="row m-0 d-lg-none bg-dark text-white" style={{ height: "10%" }}>
-                        <div className="col-12 p-0">
-                            <AdUnit
-                                id="viewer-top-ad"
-                                className="w-100 text-center"
-                                style={{
-                                    background: "#1a1a1a",
-                                    borderTop: "1px solid #333",
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
-                {/* Left Side - Document List */}
-                <div className="col-12 col-lg-4 bg-dark p-3" style={{ height: "90%", overflowY: "auto" }}>
-                    <div className="mb-3">
-                        <Form.Control type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search documents..." className="bg-dark border-secondary text-white" />
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div className="d-flex align-items-center">
-                            <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
-                            <h5 className="mb-0">Documents</h5>
-                        </div>
-                        <div>
-                            <Button variant="outline-success" size="sm" onClick={handleNewClick} className="me-2">
-                                New
-                            </Button>
-                            <Button variant="outline-primary" size="sm" onClick={handleEditClick} disabled={!selectedDoc} className="me-2">
-                                Edit
-                            </Button>
-                            <Button variant="outline-danger" size="sm" onClick={handleDeleteClick} disabled={!selectedDoc}>
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
-                    <ListGroup className="bg-dark">
-                        {sortedDocuments.map((doc) => (
-                            <ListGroup.Item key={doc.id} active={selectedDoc?.id === doc.id} onClick={() => handleDocumentSelect(doc)} style={{ cursor: "pointer" }} className="bg-dark border-secondary text-white">
-                                <div>
-                                    <h6 className="mb-0">{doc.name}</h6>
-                                    <small className="text-secondary">Last modified: {new Date(doc.updatedAt).toLocaleString()}</small>
-                                    <br />
-                                    <small className="text-secondary">Created: {new Date(doc.createdAt).toLocaleString()}</small>
-                                </div>
-                            </ListGroup.Item>
-                        ))}
-                    </ListGroup>
-                </div>
-                {/* Right Side - Preview */}
-                <div className="d-none d-lg-block col-12 col-lg-8 bg-black p-0" style={{ height: "90%" }}>
-                    {selectedDoc ? (
-                        <FileViewer currentDoc={selectedDoc} />
-                    ) : (
-                        <div className="h-100 d-flex align-items-center justify-content-center">
-                            <p className="text-muted">No document selected</p>
+        <>
+            <div className="container-fluid bg-dark text-white p-0" style={{ height: "100vh" }}>
+                <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
+                    {/* Top Ad (Mobile Only) */}
+                    {showAds && (
+                        <div className="row m-0 d-lg-none bg-dark text-white" style={{ height: "10%" }}>
+                            <div className="col-12 p-0">
+                                <AdUnit
+                                    id="viewer-top-ad"
+                                    className="w-100 text-center"
+                                    style={{
+                                        background: "#1a1a1a",
+                                        borderTop: "1px solid #333",
+                                    }}
+                                />
+                            </div>
                         </div>
                     )}
-                </div>{" "}
-                {/* Bottom Ad (Desktop Only) */}
-                {showAds && (
-                    <div className="row m-0 d-none d-lg-block bg-dark text-white" style={{ height: "10%" }}>
-                        <div className="col-12 p-0">
-                            <AdUnit
-                                id="viewer-bottom-ad"
-                                className="w-100 text-center"
-                                style={{
-                                    background: "#1a1a1a",
-                                    borderTop: "1px solid #333",
-                                }}
-                            />
+                    {/* Left Side - Document List */}
+                    <div className="col-12 col-lg-4 bg-dark p-3" style={{ height: "90%", overflowY: "auto" }}>
+                        <div className="mb-3">
+                            <Form.Control type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search documents..." className="bg-dark border-secondary text-white" />
                         </div>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <div className="d-flex align-items-center">
+                                <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
+                                <h5 className="mb-0">Documents</h5>
+                            </div>
+                            <div>
+                                <Button variant="outline-success" size="sm" onClick={handleNewClick} className="me-2">
+                                    New
+                                </Button>
+                                <Button variant="outline-primary" size="sm" onClick={handleEditClick} disabled={!selectedDoc} className="me-2">
+                                    Edit
+                                </Button>
+                                <Button variant="outline-danger" size="sm" onClick={handleDeleteClick} disabled={!selectedDoc}>
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                        <ListGroup className="bg-dark">
+                            {sortedDocuments.map((doc) => (
+                                <ListGroup.Item key={doc.id} active={selectedDoc?.id === doc.id} onClick={() => handleDocumentSelect(doc)} style={{ cursor: "pointer" }} className="bg-dark border-secondary text-white">
+                                    <div>
+                                        <h6 className="mb-0">{doc.name}</h6>
+                                        <small className="text-secondary">Last modified: {new Date(doc.updatedAt).toLocaleString()}</small>
+                                        <br />
+                                        <small className="text-secondary">Created: {new Date(doc.createdAt).toLocaleString()}</small>
+                                    </div>
+                                </ListGroup.Item>
+                            ))}
+                        </ListGroup>
                     </div>
-                )}
-            </div>
+                    {/* Right Side - Preview */}
+                    <div className="d-none d-lg-block col-12 col-lg-8 bg-black p-0" style={{ height: "90%" }}>
+                        {selectedDoc ? (
+                            <FileViewer currentDoc={selectedDoc} />
+                        ) : (
+                            <div className="h-100 d-flex align-items-center justify-content-center">
+                                <p className="text-muted">No document selected</p>
+                            </div>
+                        )}
+                    </div>{" "}
+                    {/* Bottom Ad (Desktop Only) */}
+                    {showAds && (
+                        <div className="row m-0 d-none d-lg-block bg-dark text-white" style={{ height: "10%" }}>
+                            <div className="col-12 p-0">
+                                <AdUnit
+                                    id="viewer-bottom-ad"
+                                    className="w-100 text-center"
+                                    style={{
+                                        background: "#1a1a1a",
+                                        borderTop: "1px solid #333",
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
 
-            {/* Delete Confirmation Modal */}
-            <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} className="text-white">
-                <Modal.Header closeButton className="bg-dark border-secondary">
-                    <Modal.Title>Confirm Delete</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="bg-dark">Are you sure you want to delete "{selectedDoc?.name}"? This action cannot be undone.</Modal.Body>
-                <Modal.Footer className="bg-dark border-secondary">
-                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
-                        Cancel
-                    </Button>
-                    <Button variant="danger" onClick={handleDeleteConfirm}>
-                        Delete
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                {/* Delete Confirmation Modal */}
+                <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} className="text-white">
+                    <Modal.Header closeButton className="bg-dark border-secondary">
+                        <Modal.Title>Confirm Delete</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="bg-dark">Are you sure you want to delete "{selectedDoc?.name}"? This action cannot be undone.</Modal.Body>
+                    <Modal.Footer className="bg-dark border-secondary">
+                        <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="danger" onClick={handleDeleteConfirm}>
+                            Delete
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
-            <style>{`
+                <style>{`
                 .modal-content {
                     background-color: #212529;
                     border: 1px solid #495057;
@@ -222,7 +224,9 @@ function PageFileViewer() {
                     color: #adb5bd;
                 }
             `}</style>
-        </div>
+            </div>
+            <MetaTags title={`Viewing "${currentDoc ? currentDoc.name : "Document List"}" | ScanPad`} ogTitle={`Viewing "${currentDoc ? currentDoc.name : "Document List"}" | ScanPad`} ogUrl={window.location.href} canonicalUrl={window.location.href} twitterTitle={`Viewing "${currentDoc ? currentDoc.name : "Document List"}" | ScanPad`} />
+        </>
     );
 }
 

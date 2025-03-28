@@ -24,40 +24,7 @@ function PageHome() {
 
     return (
         <>
-            <MetaTags
-                title="ScanPad - OCR-Assisted Notepad"
-                description="An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time. Simply paste an image to get started!"
-                keywords="OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, ScanPad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted"
-                ogTitle="ScanPad - Convert Images to Text"
-                ogDescription="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription."
-                ogImage="/icon.svg"
-                ogUrl={window.location.href}
-                twitterCard="summary_large_image"
-                twitterTitle="ScanPad - Convert Images to Text"
-                twitterDescription="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription."
-                twitterImage="/icon.svg"
-                canonicalUrl={window.location.href}
-                author="R.Mabunga"
-                language="English"
-                themeColor="#000000"
-                viewport="width=device-width, initial-scale=1.0"
-                charset="utf-8"
-                favicon="/icon.svg"
-                appleTouchIcon="/icon.svg"
-                structuredData={{
-                    "@context": "https://schema.org",
-                    "@type": "WebApplication",
-                    name: "ScanPad",
-                    description: "An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time.",
-                    applicationCategory: "Text Editor",
-                    operatingSystem: "Web Browser",
-                    offers: {
-                        "@type": "Offer",
-                        price: "0",
-                        priceCurrency: "USD",
-                    },
-                }}
-            />
+            <MetaTags ogUrl={window.location.href} canonicalUrl={window.location.href} />
             <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
                 <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
                     {/* Main Content */}
