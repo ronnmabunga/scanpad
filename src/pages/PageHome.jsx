@@ -25,15 +25,15 @@ function PageHome() {
     return (
         <>
             <MetaTags
-                title="OCR-Assisted Notepad - Home"
+                title="ScanPad - OCR-Assisted Notepad"
                 description="An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time. Simply paste an image to get started!"
-                keywords="OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, OCR-assisted notepad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted"
-                ogTitle="OCR Rich Text Editor - Convert Images to Text"
+                keywords="OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, ScanPad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted"
+                ogTitle="ScanPad - Convert Images to Text"
                 ogDescription="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription."
                 ogImage="/icon.svg"
                 ogUrl={window.location.href}
                 twitterCard="summary_large_image"
-                twitterTitle="OCR-Assisted Notepad - Convert Images to Text"
+                twitterTitle="ScanPad - Convert Images to Text"
                 twitterDescription="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription."
                 twitterImage="/icon.svg"
                 canonicalUrl={window.location.href}
@@ -47,7 +47,7 @@ function PageHome() {
                 structuredData={{
                     "@context": "https://schema.org",
                     "@type": "WebApplication",
-                    name: "OCR-Assisted Notepad",
+                    name: "ScanPad",
                     description: "An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time.",
                     applicationCategory: "Text Editor",
                     operatingSystem: "Web Browser",
@@ -63,8 +63,9 @@ function PageHome() {
                     {/* Main Content */}
                     <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center text-center bg-black text-white" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
                         <div className="text-center m-0">
-                            <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "30%", height: "40%" }} />
-                            <p className="font-body-1">OCR-Assisted Notepad</p>
+                            <img src="/icon-dark.svg" alt="ScanPad Icon" style={{ width: "30%", height: "40%" }} />
+                            <h1 className="font-body-1 mb-2">ScanPad</h1>
+                            <p className="font-body-4 text-secondary mb-3">OCR-Assisted Notepad</p>
                             <p className="font-body-5 mx-5">Paste an image from the clipboard onto this window, after the app transcribes the image, paste again on the editor body to get the transcribed text.</p>
                             <Button variant="primary" className="font-body-5 mx-5 mt-3" onClick={() => navigate("/view")}>
                                 View All Documents

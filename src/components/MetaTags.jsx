@@ -2,15 +2,15 @@ import React from "react";
 import { Helmet } from "react-helmet";
 
 const MetaTags = ({
-    title = "OCR-Assisted Notepad - Home",
+    title = "ScanPad - OCR-Assisted Notepad",
     description = "An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time. Simply paste an image to get started!",
-    keywords = "OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, OCR-assisted notepad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted",
-    ogTitle = "OCR Rich Text Editor - Convert Images to Text",
+    keywords = "OCR, rich text editor, image to text, text transcription, document editor, text processing, assisted editing, ScanPad, OCR transcription, OCR editor, OCR text editor, OCR text transcription, document editor, text editor, OCR-assisted",
+    ogTitle = "ScanPad - Convert Images to Text",
     ogDescription = "Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription.",
     ogImage = "/icon.svg",
     ogUrl = typeof window !== "undefined" ? window.location.href : "",
     twitterCard = "summary_large_image",
-    twitterTitle = "OCR-Assisted Notepad - Convert Images to Text",
+    twitterTitle = "ScanPad - Convert Images to Text",
     twitterDescription = "Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription.",
     twitterImage = "/icon.svg",
     canonicalUrl = typeof window !== "undefined" ? window.location.href : "",
@@ -24,7 +24,7 @@ const MetaTags = ({
     structuredData = {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        name: "OCR-Assisted Notepad",
+        name: "ScanPad",
         description: "An OCR-assisted rich text editor that allows you to transcribe text from images and edit it in real-time.",
         applicationCategory: "Text Editor",
         operatingSystem: "Web Browser",
