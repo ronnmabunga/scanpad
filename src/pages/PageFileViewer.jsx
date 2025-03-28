@@ -100,7 +100,7 @@ function PageFileViewer() {
 
     return (
         <div className="container-fluid bg-dark text-white p-0" style={{ height: "100vh" }}>
-            <div className="row m-0" style={{ height: "100%" }}>
+            <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
                 {/* Top Ad (Mobile Only) */}
                 {showAds && (
                     <div className="row m-0 d-lg-none bg-dark text-white" style={{ height: "10%" }}>

@@ -59,7 +59,7 @@ function PageHome() {
                 }}
             />
             <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
-                <div className="row m-0" style={{ height: "100%" }}>
+                <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
                     {/* Main Content */}
                     <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center text-center bg-black text-white" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
                         <div className="text-center m-0">

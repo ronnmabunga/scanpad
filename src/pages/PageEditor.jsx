@@ -17,7 +17,7 @@ function PageEditor() {
     const { fileId } = useParams();
     const { documents, setCurrentDoc } = useDatabase();
     const [isNotFound, setIsNotFound] = useState(false);
-    const [showAds, setShowAds] = useState(false); // Default to false, can be controlled by auth later
+    const [showAds, setShowAds] = useState(true); // Default to false, can be controlled by auth later
 
     useEffect(() => {
         if (fileId) {
