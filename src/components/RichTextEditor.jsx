@@ -642,6 +642,7 @@ function RichTextEditor({ className, style, autoPasteOCR, onAutoPasteOCRChange, 
                             </NavDropdown>
                         </Nav>
                         <div className="d-flex align-items-center position-absolute start-50 translate-middle-x">
+                            <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
                             <span className="text-white">
                                 <strong>{currentDoc?.name || "Untitled Document"}</strong>
                             </span>

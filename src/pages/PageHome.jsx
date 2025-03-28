@@ -61,12 +61,15 @@ function PageHome() {
             <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
                 <div className="row m-0" style={{ height: "100%" }}>
                     {/* Main Content */}
-                    <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center bg-black text-white" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
-                        <p className="font-body-1">OCR-Assisted Notepad</p>
-                        <p className="font-body-5 mx-5">Paste an image from the clipboard onto this window, after the app transcribes the image, paste again on the editor body to get the transcribed text.</p>
-                        <Button variant="primary" className="font-body-5 mx-5 mt-3" onClick={() => navigate("/view")}>
-                            View All Documents
-                        </Button>
+                    <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center text-center bg-black text-white" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
+                        <div className="text-center m-0">
+                            <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "30%", height: "40%" }} />
+                            <p className="font-body-1">OCR-Assisted Notepad</p>
+                            <p className="font-body-5 mx-5">Paste an image from the clipboard onto this window, after the app transcribes the image, paste again on the editor body to get the transcribed text.</p>
+                            <Button variant="primary" className="font-body-5 mx-5 mt-3" onClick={() => navigate("/view")}>
+                                View All Documents
+                            </Button>
+                        </div>
                     </div>
                     {/* In-between Ad (Mobile Only) */}
                     {showAds && (

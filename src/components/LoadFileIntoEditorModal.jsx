@@ -166,6 +166,9 @@ function LoadFileIntoEditorModal({ show, onHide, hasUnsavedChanges, onDiscardCha
                 .text-secondary {
                     color: #adb5bd !important;
                 }
+                .form-control::placeholder {
+                    color: #adb5bd;
+                }
             `}</style>
         </>
     );

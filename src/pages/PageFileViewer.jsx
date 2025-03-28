@@ -122,7 +122,10 @@ function PageFileViewer() {
                         <Form.Control type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search documents..." className="bg-dark border-secondary text-white" />
                     </div>
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="mb-0">Documents</h5>
+                        <div className="d-flex align-items-center">
+                            <img src="/icon-dark.svg" alt="OCR Icon" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
+                            <h5 className="mb-0">Documents</h5>
+                        </div>
                         <div>
                             <Button variant="outline-success" size="sm" onClick={handleNewClick} className="me-2">
                                 New
@@ -214,6 +217,9 @@ function PageFileViewer() {
                 }
                 .text-secondary {
                     color: #adb5bd !important;
+                }
+                .form-control::placeholder {
+                    color: #adb5bd;
                 }
             `}</style>
         </div>
