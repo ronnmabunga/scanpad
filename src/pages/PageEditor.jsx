@@ -17,7 +17,7 @@ const AdUnit = ({ className, style, id }) => (
 function PageEditor() {
     const { fileId } = useParams();
     const { documents, currentDoc, setCurrentDoc } = useDatabase();
-    const [isNotFound, setIsNotFound] = useState(false);
+    const [isNotFound, setIsNotFound] = useState(true);
     const [showAds, setShowAds] = useState(true); // Default to false, can be controlled by auth later
 
     useEffect(() => {
@@ -61,7 +61,7 @@ function PageEditor() {
             <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
                 {/* Top Ad (Mobile Only) */}
                 {showAds && (
-                    <div className="row m-0 d-lg-none block bg-black text-white">
+                    <div className="row m-0 d-lg-none block bg-black text-white p-1">
                         <div className="col-12 p-0">
                             <AdUnit
                                 id="editor-top-ad"
@@ -78,7 +78,7 @@ function PageEditor() {
                 <div className="row m-0" style={{ height: "100%" }}>
                     {/* Left Sidebar Ad (Desktop Only) */}
                     {showAds && (
-                        <div className="col-auto d-none d-lg-block p-0" style={{ width: "160px" }}>
+                        <div className="col-auto d-none d-lg-block p-1" style={{ width: "160px" }}>
                             <AdUnit
                                 id="editor-left-ad"
                                 className="h-100"
@@ -97,7 +97,7 @@ function PageEditor() {
 
                     {/* Right Sidebar Ad (Desktop Only) */}
                     {showAds && (
-                        <div className="col-auto d-none d-lg-block p-0" style={{ width: "160px" }}>
+                        <div className="col-auto d-none d-lg-block p-1" style={{ width: "160px" }}>
                             <AdUnit
                                 id="editor-right-ad"
                                 className="h-100"

@@ -27,8 +27,23 @@ function PageHome() {
             <MetaTags ogUrl={window.location.href} canonicalUrl={window.location.href} />
             <div className="container-fluid bg-black text-white p-0" style={{ height: "100vh" }}>
                 <div className={`row m-0 ${!showAds && "d-flex flex-column justify-content-center align-items-center"}`} style={{ height: "100%" }}>
+                    {/* In-betweenTop Ad (Mobile Only) */}
+                    {showAds && (
+                        <div className="row m-0 d-lg-none bg-black text-white">
+                            <div className="col-12 p-1">
+                                <AdUnit
+                                    id="home-between-ad"
+                                    className="w-100 text-center"
+                                    style={{
+                                        background: "#1a1a1a",
+                                        borderTop: "1px solid #333",
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
                     {/* Main Content */}
-                    <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center text-center bg-black text-white" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
+                    <div className="col-12 col-lg-5 text-center m-0 d-flex flex-column justify-content-center bg-black text-white p-1" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
                         <div className="text-center m-0">
                             <img src="/icon-dark.svg" alt="ScanPad Icon" style={{ width: "30%", height: "40%" }} />
                             <h1 className="font-body-1 mb-2">ScanPad</h1>
@@ -39,22 +54,7 @@ function PageHome() {
                             </Button>
                         </div>
                     </div>
-                    {/* In-between Ad (Mobile Only) */}
-                    {showAds && (
-                        <div className="row m-0 d-lg-none bg-black text-white">
-                            <div className="col-12 p-0">
-                                <AdUnit
-                                    id="home-between-ad"
-                                    className="w-100 text-center py-2"
-                                    style={{
-                                        background: "#1a1a1a",
-                                        borderTop: "1px solid #333",
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
-                    <div className="col-12 col-lg-7 bg-black text-white py-3 m-0" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
+                    <div className="d-none d-lg-block col-lg-7 bg-black text-white  p-1 m-0" style={{ height: "90%", maxHeight: "calc(100% - 95px)" }}>
                         <OCRNotepad style={{ height: "100%", maxHeight: "calc(100% - 5px)" }} />
                     </div>{" "}
                     {/* Bottom Bar Ad (Desktop Only) */}
