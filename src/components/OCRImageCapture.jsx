@@ -80,7 +80,7 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
         setIsCameraOpen(true);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: isFrontCamera ? "user" : "environment" },
+                video: { facingMode: { exact: isFrontCamera ? "user" : "environment" } },
             });
             videoRef.current.srcObject = stream;
             // Save the camera preference to localStorage
