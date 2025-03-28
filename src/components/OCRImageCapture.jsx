@@ -10,7 +10,11 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
-    const [isFrontCamera, setIsFrontCamera] = useState(true);
+    const [isFrontCamera, setIsFrontCamera] = useState(() => {
+        // Get the last used camera from localStorage, default to front camera
+        const lastCamera = localStorage.getItem("lastUsedCamera");
+        return lastCamera ? lastCamera === "front" : true;
+    });
     const videoRef = useRef(null);
     const autoPasteOCRRef = useRef(autoPasteOCR);
     const language = "eng";
@@ -75,8 +79,12 @@ const OCRImageCapture = ({ className, style, autoPasteOCR, ...props }) => {
     const openCamera = async () => {
         setIsCameraOpen(true);
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: isFrontCamera ? "user" : "environment" } });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: isFrontCamera ? "user" : "environment" },
+            });
             videoRef.current.srcObject = stream;
+            // Save the camera preference to localStorage
+            localStorage.setItem("lastUsedCamera", isFrontCamera ? "front" : "back");
         } catch (error) {
             console.error("Error accessing camera:", error);
         }
