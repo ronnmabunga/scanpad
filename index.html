@@ -4,6 +4,7 @@
         <meta charset="utf-8" />
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <!-- Basic Meta Tags -->
@@ -14,18 +15,25 @@
         <meta name="robots" content="index,follow" />
         <meta name="language" content="English" />
         <meta name="theme-color" content="#000000" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="ScanPad" />
 
         <!-- Open Graph Meta Tags -->
         <meta property="og:title" content="ScanPad - OCR-Assisted Notepad" />
         <meta property="og:description" content="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription." />
         <meta property="og:image" content="/icon.svg" />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://scanpad.vercel.app" />
+        <meta property="og:site_name" content="ScanPad" />
 
         <!-- Twitter Card Meta Tags -->
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="ScanPad - OCR-Assisted Notepad" />
         <meta name="twitter:description" content="Transform images into editable text with our OCR-powered rich text editor. Easy to use, instant transcription." />
         <meta name="twitter:image" content="/icon.svg" />
+        <meta name="twitter:creator" content="@ronnmabunga" />
 
         <meta name="google-site-verification" content="lOMJjkMDHqn7EE08rsyFcgDvj-ic0c9BEACMjFWdwfo" />
 
@@ -42,6 +50,11 @@
                     "@type": "Offer",
                     "price": "0",
                     "priceCurrency": "USD"
+                },
+                "url": "https://scanpad.vercel.app",
+                "author": {
+                    "@type": "Person",
+                    "name": "Ronn Mabunga"
                 }
             }
         </script>
